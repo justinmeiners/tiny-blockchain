@@ -1,6 +1,6 @@
-# Blockchain Sample
+# Tiny Blockchain
 
-A simple blockchain for arbitrary data. Includes proof-of-work to limit block production rate.
+A simple blockchain for storing arbitrary data. Includes proof-of-work to limit block production rate.
 
 I made this to learn about [Bitcoin](https://bitcoin.org/bitcoin.pdf).
 

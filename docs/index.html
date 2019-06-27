@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Write your Own Proof-of-Work Blockchain</title>
+<script>
+!function(){var q=null;window.PR_SHOULD_USE_CONTINUATION=!0;
+(function(){function R(a){function d(e){var b=e.charCodeAt(0);if(b!==92)return b;var a=e.charAt(1);return(b=r[a])?b:"0"<=a&&a<="7"?parseInt(e.substring(1),8):a==="u"||a==="x"?parseInt(e.substring(2),16):e.charCodeAt(1)}function g(e){if(e<32)return(e<16?"\\x0":"\\x")+e.toString(16);e=String.fromCharCode(e);return e==="\\"||e==="-"||e==="]"||e==="^"?"\\"+e:e}function b(e){var b=e.substring(1,e.length-1).match(/\\u[\dA-Fa-f]{4}|\\x[\dA-Fa-f]{2}|\\[0-3][0-7]{0,2}|\\[0-7]{1,2}|\\[\S\s]|[^\\]/g),e=[],a=
+b[0]==="^",c=["["];a&&c.push("^");for(var a=a?1:0,f=b.length;a<f;++a){var h=b[a];if(/\\[bdsw]/i.test(h))c.push(h);else{var h=d(h),l;a+2<f&&"-"===b[a+1]?(l=d(b[a+2]),a+=2):l=h;e.push([h,l]);l<65||h>122||(l<65||h>90||e.push([Math.max(65,h)|32,Math.min(l,90)|32]),l<97||h>122||e.push([Math.max(97,h)&-33,Math.min(l,122)&-33]))}}e.sort(function(e,a){return e[0]-a[0]||a[1]-e[1]});b=[];f=[];for(a=0;a<e.length;++a)h=e[a],h[0]<=f[1]+1?f[1]=Math.max(f[1],h[1]):b.push(f=h);for(a=0;a<b.length;++a)h=b[a],c.push(g(h[0])),
+h[1]>h[0]&&(h[1]+1>h[0]&&c.push("-"),c.push(g(h[1])));c.push("]");return c.join("")}function s(e){for(var a=e.source.match(/\[(?:[^\\\] ]|\\[\S\s])*]|\\u[\dA-Fa-f]{4}|\\x[\dA-Fa-f]{2}|\\\d+|\\[^\dux]|\(\?[!:=]|[()^]|[^()[\\^]+/g),c=a.length,d=[],f=0,h=0;f<c;++f){var l=a[f];l==="("?++h:"\\"===l.charAt(0)&&(l=+l.substring(1))&&(l<=h?d[l]=-1:a[f]=g(l))}for(f=1;f<d.length;++f)-1===d[f]&&(d[f]=++x);for(h=f=0;f<c;++f)l=a[f],l==="("?(++h,d[h]||(a[f]="(?:")):"\\"===l.charAt(0)&&(l=+l.substring(1))&&l<=h&&
+(a[f]="\\"+d[l]);for(f=0;f<c;++f)"^"===a[f]&&"^"!==a[f+1]&&(a[f]="");if(e.ignoreCase&&m)for(f=0;f<c;++f)l=a[f],e=l.charAt(0),l.length>=2&&e==="["?a[f]=b(l):e!=="\\"&&(a[f]=l.replace(/[A-Za-z]/g,function(a){a=a.charCodeAt(0);return"["+String.fromCharCode(a&-33,a|32)+"]"}));return a.join("")}for(var x=0,m=!1,j=!1,k=0,c=a.length;k<c;++k){var i=a[k];if(i.ignoreCase)j=!0;else if(/[a-z]/i.test(i.source.replace(/\\u[\da-f]{4}|\\x[\da-f]{2}|\\[^UXux]/gi,""))){m=!0;j=!1;break}}for(var r={b:8,t:9,n:10,v:11,
+f:12,r:13},n=[],k=0,c=a.length;k<c;++k){i=a[k];if(i.global||i.multiline)throw Error(""+i);n.push("(?:"+s(i)+")")}return RegExp(n.join("|"),j?"gi":"g")}function S(a,d){function g(a){var c=a.nodeType;if(c==1){if(!b.test(a.className)){for(c=a.firstChild;c;c=c.nextSibling)g(c);c=a.nodeName.toLowerCase();if("br"===c||"li"===c)s[j]="\n",m[j<<1]=x++,m[j++<<1|1]=a}}else if(c==3||c==4)c=a.nodeValue,c.length&&(c=d?c.replace(/\r\n?/g,"\n"):c.replace(/[\t\n\r ]+/g," "),s[j]=c,m[j<<1]=x,x+=c.length,m[j++<<1|1]=
+a)}var b=/(?:^|\s)nocode(?:\s|$)/,s=[],x=0,m=[],j=0;g(a);return{a:s.join("").replace(/\n$/,""),d:m}}function H(a,d,g,b){d&&(a={a:d,e:a},g(a),b.push.apply(b,a.g))}function T(a){for(var d=void 0,g=a.firstChild;g;g=g.nextSibling)var b=g.nodeType,d=b===1?d?a:g:b===3?U.test(g.nodeValue)?a:d:d;return d===a?void 0:d}function D(a,d){function g(a){for(var j=a.e,k=[j,"pln"],c=0,i=a.a.match(s)||[],r={},n=0,e=i.length;n<e;++n){var z=i[n],w=r[z],t=void 0,f;if(typeof w==="string")f=!1;else{var h=b[z.charAt(0)];
+if(h)t=z.match(h[1]),w=h[0];else{for(f=0;f<x;++f)if(h=d[f],t=z.match(h[1])){w=h[0];break}t||(w="pln")}if((f=w.length>=5&&"lang-"===w.substring(0,5))&&!(t&&typeof t[1]==="string"))f=!1,w="src";f||(r[z]=w)}h=c;c+=z.length;if(f){f=t[1];var l=z.indexOf(f),B=l+f.length;t[2]&&(B=z.length-t[2].length,l=B-f.length);w=w.substring(5);H(j+h,z.substring(0,l),g,k);H(j+h+l,f,I(w,f),k);H(j+h+B,z.substring(B),g,k)}else k.push(j+h,w)}a.g=k}var b={},s;(function(){for(var g=a.concat(d),j=[],k={},c=0,i=g.length;c<i;++c){var r=
+g[c],n=r[3];if(n)for(var e=n.length;--e>=0;)b[n.charAt(e)]=r;r=r[1];n=""+r;k.hasOwnProperty(n)||(j.push(r),k[n]=q)}j.push(/[\S\s]/);s=R(j)})();var x=d.length;return g}function v(a){var d=[],g=[];a.tripleQuotedStrings?d.push(["str",/^(?:'''(?:[^'\\]|\\[\S\s]|''?(?=[^']))*(?:'''|$)|"""(?:[^"\\]|\\[\S\s]|""?(?=[^"]))*(?:"""|$)|'(?:[^'\\]|\\[\S\s])*(?:'|$)|"(?:[^"\\]|\\[\S\s])*(?:"|$))/,q,"'\""]):a.multiLineStrings?d.push(["str",/^(?:'(?:[^'\\]|\\[\S\s])*(?:'|$)|"(?:[^"\\]|\\[\S\s])*(?:"|$)|`(?:[^\\`]|\\[\S\s])*(?:`|$))/,
+q,"'\"`"]):d.push(["str",/^(?:'(?:[^\n\r'\\]|\\.)*(?:'|$)|"(?:[^\n\r"\\]|\\.)*(?:"|$))/,q,"\"'"]);a.verbatimStrings&&g.push(["str",/^@"(?:[^"]|"")*(?:"|$)/,q]);var b=a.hashComments;b&&(a.cStyleComments?(b>1?d.push(["com",/^#(?:##(?:[^#]|#(?!##))*(?:###|$)|.*)/,q,"#"]):d.push(["com",/^#(?:(?:define|e(?:l|nd)if|else|error|ifn?def|include|line|pragma|undef|warning)\b|[^\n\r]*)/,q,"#"]),g.push(["str",/^<(?:(?:(?:\.\.\/)*|\/?)(?:[\w-]+(?:\/[\w-]+)+)?[\w-]+\.h(?:h|pp|\+\+)?|[a-z]\w*)>/,q])):d.push(["com",
+/^#[^\n\r]*/,q,"#"]));a.cStyleComments&&(g.push(["com",/^\/\/[^\n\r]*/,q]),g.push(["com",/^\/\*[\S\s]*?(?:\*\/|$)/,q]));if(b=a.regexLiterals){var s=(b=b>1?"":"\n\r")?".":"[\\S\\s]";g.push(["lang-regex",RegExp("^(?:^^\\.?|[+-]|[!=]=?=?|\\#|%=?|&&?=?|\\(|\\*=?|[+\\-]=|->|\\/=?|::?|<<?=?|>>?>?=?|,|;|\\?|@|\\[|~|{|\\^\\^?=?|\\|\\|?=?|break|case|continue|delete|do|else|finally|instanceof|return|throw|try|typeof)\\s*("+("/(?=[^/*"+b+"])(?:[^/\\x5B\\x5C"+b+"]|\\x5C"+s+"|\\x5B(?:[^\\x5C\\x5D"+b+"]|\\x5C"+
+s+")*(?:\\x5D|$))+/")+")")])}(b=a.types)&&g.push(["typ",b]);b=(""+a.keywords).replace(/^ | $/g,"");b.length&&g.push(["kwd",RegExp("^(?:"+b.replace(/[\s,]+/g,"|")+")\\b"),q]);d.push(["pln",/^\s+/,q," \r\n\t\u00a0"]);b="^.[^\\s\\w.$@'\"`/\\\\]*";a.regexLiterals&&(b+="(?!s*/)");g.push(["lit",/^@[$_a-z][\w$@]*/i,q],["typ",/^(?:[@_]?[A-Z]+[a-z][\w$@]*|\w+_t\b)/,q],["pln",/^[$_a-z][\w$@]*/i,q],["lit",/^(?:0x[\da-f]+|(?:\d(?:_\d+)*\d*(?:\.\d*)?|\.\d\+)(?:e[+-]?\d+)?)[a-z]*/i,q,"0123456789"],["pln",/^\\[\S\s]?/,
+q],["pun",RegExp(b),q]);return D(d,g)}function J(a,d,g){function b(a){var c=a.nodeType;if(c==1&&!x.test(a.className))if("br"===a.nodeName)s(a),a.parentNode&&a.parentNode.removeChild(a);else for(a=a.firstChild;a;a=a.nextSibling)b(a);else if((c==3||c==4)&&g){var d=a.nodeValue,i=d.match(m);if(i)c=d.substring(0,i.index),a.nodeValue=c,(d=d.substring(i.index+i[0].length))&&a.parentNode.insertBefore(j.createTextNode(d),a.nextSibling),s(a),c||a.parentNode.removeChild(a)}}function s(a){function b(a,c){var d=
+c?a.cloneNode(!1):a,e=a.parentNode;if(e){var e=b(e,1),g=a.nextSibling;e.appendChild(d);for(var i=g;i;i=g)g=i.nextSibling,e.appendChild(i)}return d}for(;!a.nextSibling;)if(a=a.parentNode,!a)return;for(var a=b(a.nextSibling,0),d;(d=a.parentNode)&&d.nodeType===1;)a=d;c.push(a)}for(var x=/(?:^|\s)nocode(?:\s|$)/,m=/\r\n?|\n/,j=a.ownerDocument,k=j.createElement("li");a.firstChild;)k.appendChild(a.firstChild);for(var c=[k],i=0;i<c.length;++i)b(c[i]);d===(d|0)&&c[0].setAttribute("value",d);var r=j.createElement("ol");
+r.className="linenums";for(var d=Math.max(0,d-1|0)||0,i=0,n=c.length;i<n;++i)k=c[i],k.className="L"+(i+d)%10,k.firstChild||k.appendChild(j.createTextNode("\u00a0")),r.appendChild(k);a.appendChild(r)}function p(a,d){for(var g=d.length;--g>=0;){var b=d[g];F.hasOwnProperty(b)?E.console&&console.warn("cannot override language handler %s",b):F[b]=a}}function I(a,d){if(!a||!F.hasOwnProperty(a))a=/^\s*</.test(d)?"default-markup":"default-code";return F[a]}function K(a){var d=a.h;try{var g=S(a.c,a.i),b=g.a;
+a.a=b;a.d=g.d;a.e=0;I(d,b)(a);var s=/\bMSIE\s(\d+)/.exec(navigator.userAgent),s=s&&+s[1]<=8,d=/\n/g,x=a.a,m=x.length,g=0,j=a.d,k=j.length,b=0,c=a.g,i=c.length,r=0;c[i]=m;var n,e;for(e=n=0;e<i;)c[e]!==c[e+2]?(c[n++]=c[e++],c[n++]=c[e++]):e+=2;i=n;for(e=n=0;e<i;){for(var p=c[e],w=c[e+1],t=e+2;t+2<=i&&c[t+1]===w;)t+=2;c[n++]=p;c[n++]=w;e=t}c.length=n;var f=a.c,h;if(f)h=f.style.display,f.style.display="none";try{for(;b<k;){var l=j[b+2]||m,B=c[r+2]||m,t=Math.min(l,B),A=j[b+1],G;if(A.nodeType!==1&&(G=x.substring(g,
+t))){s&&(G=G.replace(d,"\r"));A.nodeValue=G;var L=A.ownerDocument,o=L.createElement("span");o.className=c[r+1];var v=A.parentNode;v.replaceChild(o,A);o.appendChild(A);g<l&&(j[b+1]=A=L.createTextNode(x.substring(t,l)),v.insertBefore(A,o.nextSibling))}g=t;g>=l&&(b+=2);g>=B&&(r+=2)}}finally{if(f)f.style.display=h}}catch(u){E.console&&console.log(u&&u.stack||u)}}var E=window,y=["break,continue,do,else,for,if,return,while"],C=[[y,"auto,case,char,const,default,double,enum,extern,float,goto,inline,int,long,register,short,signed,sizeof,static,struct,switch,typedef,union,unsigned,void,volatile"],
+"catch,class,delete,false,import,new,operator,private,protected,public,this,throw,true,try,typeof"],M=[C,"alignof,align_union,asm,axiom,bool,concept,concept_map,const_cast,constexpr,decltype,delegate,dynamic_cast,explicit,export,friend,generic,late_check,mutable,namespace,nullptr,property,reinterpret_cast,static_assert,static_cast,template,typeid,typename,using,virtual,where"],V=[C,"abstract,assert,boolean,byte,extends,final,finally,implements,import,instanceof,interface,null,native,package,strictfp,super,synchronized,throws,transient"],
+N=[C,"abstract,as,base,bool,by,byte,checked,decimal,delegate,descending,dynamic,event,finally,fixed,foreach,from,group,implicit,in,interface,internal,into,is,let,lock,null,object,out,override,orderby,params,partial,readonly,ref,sbyte,sealed,stackalloc,string,select,uint,ulong,unchecked,unsafe,ushort,var,virtual,where"],C=[C,"debugger,eval,export,function,get,null,set,undefined,var,with,Infinity,NaN"],O=[y,"and,as,assert,class,def,del,elif,except,exec,finally,from,global,import,in,is,lambda,nonlocal,not,or,pass,print,raise,try,with,yield,False,True,None"],
+P=[y,"alias,and,begin,case,class,def,defined,elsif,end,ensure,false,in,module,next,nil,not,or,redo,rescue,retry,self,super,then,true,undef,unless,until,when,yield,BEGIN,END"],W=[y,"as,assert,const,copy,drop,enum,extern,fail,false,fn,impl,let,log,loop,match,mod,move,mut,priv,pub,pure,ref,self,static,struct,true,trait,type,unsafe,use"],y=[y,"case,done,elif,esac,eval,fi,function,in,local,set,then,until"],Q=/^(DIR|FILE|vector|(de|priority_)?queue|list|stack|(const_)?iterator|(multi)?(set|map)|bitset|u?(int|float)\d*)\b/,
+U=/\S/,X=v({keywords:[M,N,C,"caller,delete,die,do,dump,elsif,eval,exit,foreach,for,goto,if,import,last,local,my,next,no,our,print,package,redo,require,sub,undef,unless,until,use,wantarray,while,BEGIN,END",O,P,y],hashComments:!0,cStyleComments:!0,multiLineStrings:!0,regexLiterals:!0}),F={};p(X,["default-code"]);p(D([],[["pln",/^[^<?]+/],["dec",/^<!\w[^>]*(?:>|$)/],["com",/^<\!--[\S\s]*?(?:--\>|$)/],["lang-",/^<\?([\S\s]+?)(?:\?>|$)/],["lang-",/^<%([\S\s]+?)(?:%>|$)/],["pun",/^(?:<[%?]|[%?]>)/],["lang-",
+/^<xmp\b[^>]*>([\S\s]+?)<\/xmp\b[^>]*>/i],["lang-js",/^<script\b[^>]*>([\S\s]*?)(<\/script\b[^>]*>)/i],["lang-css",/^<style\b[^>]*>([\S\s]*?)(<\/style\b[^>]*>)/i],["lang-in.tag",/^(<\/?[a-z][^<>]*>)/i] ]),["default-markup","htm","html","mxml","xhtml","xml","xsl"]);p(D([["pln",/^\s+/,q," \t\r\n"],["atv",/^(?:"[^"]*"?|'[^']*'?)/,q,"\"'"] ],[["tag",/^^<\/?[a-z](?:[\w-.:]*\w)?|\/?>$/i],["atn",/^(?!style[\s=]|on)[a-z](?:[\w:-]*\w)?/i],["lang-uq.val",/^=\s*([^\s"'>]*(?:[^\s"'/>]|\/(?=\s)))/],["pun",/^[/<->]+/],
+["lang-js",/^on\w+\s*=\s*"([^"]+)"/i],["lang-js",/^on\w+\s*=\s*'([^']+)'/i],["lang-js",/^on\w+\s*=\s*([^\s"'>]+)/i],["lang-css",/^style\s*=\s*"([^"]+)"/i],["lang-css",/^style\s*=\s*'([^']+)'/i],["lang-css",/^style\s*=\s*([^\s"'>]+)/i] ]),["in.tag"]);p(D([],[["atv",/^[\S\s]+/] ]),["uq.val"]);p(v({keywords:M,hashComments:!0,cStyleComments:!0,types:Q}),["c","cc","cpp","cxx","cyc","m"]);p(v({keywords:"null,true,false"}),["json"]);p(v({keywords:N,hashComments:!0,cStyleComments:!0,verbatimStrings:!0,types:Q}),
+["cs"]);p(v({keywords:V,cStyleComments:!0}),["java"]);p(v({keywords:y,hashComments:!0,multiLineStrings:!0}),["bash","bsh","csh","sh"]);p(v({keywords:O,hashComments:!0,multiLineStrings:!0,tripleQuotedStrings:!0}),["cv","py","python"]);p(v({keywords:"caller,delete,die,do,dump,elsif,eval,exit,foreach,for,goto,if,import,last,local,my,next,no,our,print,package,redo,require,sub,undef,unless,until,use,wantarray,while,BEGIN,END",hashComments:!0,multiLineStrings:!0,regexLiterals:2}),["perl","pl","pm"]);p(v({keywords:P,
+hashComments:!0,multiLineStrings:!0,regexLiterals:!0}),["rb","ruby"]);p(v({keywords:C,cStyleComments:!0,regexLiterals:!0}),["javascript","js"]);p(v({keywords:"all,and,by,catch,class,else,extends,false,finally,for,if,in,is,isnt,loop,new,no,not,null,of,off,on,or,return,super,then,throw,true,try,unless,until,when,while,yes",hashComments:3,cStyleComments:!0,multilineStrings:!0,tripleQuotedStrings:!0,regexLiterals:!0}),["coffee"]);p(v({keywords:W,cStyleComments:!0,multilineStrings:!0}),["rc","rs","rust"]);
+p(D([],[["str",/^[\S\s]+/] ]),["regex"]);var Y=E.PR={createSimpleLexer:D,registerLangHandler:p,sourceDecorator:v,PR_ATTRIB_NAME:"atn",PR_ATTRIB_VALUE:"atv",PR_COMMENT:"com",PR_DECLARATION:"dec",PR_KEYWORD:"kwd",PR_LITERAL:"lit",PR_NOCODE:"nocode",PR_PLAIN:"pln",PR_PUNCTUATION:"pun",PR_SOURCE:"src",PR_STRING:"str",PR_TAG:"tag",PR_TYPE:"typ",prettyPrintOne:E.prettyPrintOne=function(a,d,g){var b=document.createElement("div");b.innerHTML="<pre>"+a+"</pre>";b=b.firstChild;g&&J(b,g,!0);K({h:d,j:g,c:b,i:1});
+return b.innerHTML},prettyPrint:E.prettyPrint=function(a,d){function g(){for(var b=E.PR_SHOULD_USE_CONTINUATION?c.now()+250:Infinity;i<p.length&&c.now()<b;i++){for(var d=p[i],j=h,k=d;k=k.previousSibling;){var m=k.nodeType,o=(m===7||m===8)&&k.nodeValue;if(o?!/^\??prettify\b/.test(o):m!==3||/\S/.test(k.nodeValue))break;if(o){j={};o.replace(/\b(\w+)=([\w%+\-.:]+)/g,function(a,b,c){j[b]=c});break}}k=d.className;if((j!==h||e.test(k))&&!v.test(k)){m=!1;for(o=d.parentNode;o;o=o.parentNode)if(f.test(o.tagName)&&
+o.className&&e.test(o.className)){m=!0;break}if(!m){d.className+=" prettyprinted";m=j.lang;if(!m){var m=k.match(n),y;if(!m&&(y=T(d))&&t.test(y.tagName))m=y.className.match(n);m&&(m=m[1])}if(w.test(d.tagName))o=1;else var o=d.currentStyle,u=s.defaultView,o=(o=o?o.whiteSpace:u&&u.getComputedStyle?u.getComputedStyle(d,q).getPropertyValue("white-space"):0)&&"pre"===o.substring(0,3);u=j.linenums;if(!(u=u==="true"||+u))u=(u=k.match(/\blinenums\b(?::(\d+))?/))?u[1]&&u[1].length?+u[1]:!0:!1;u&&J(d,u,o);r=
+{h:m,c:d,j:u,i:o};K(r)}}}i<p.length?setTimeout(g,250):"function"===typeof a&&a()}for(var b=d||document.body,s=b.ownerDocument||document,b=[b.getElementsByTagName("pre"),b.getElementsByTagName("code"),b.getElementsByTagName("xmp")],p=[],m=0;m<b.length;++m)for(var j=0,k=b[m].length;j<k;++j)p.push(b[m][j]);var b=q,c=Date;c.now||(c={now:function(){return+new Date}});var i=0,r,n=/\blang(?:uage)?-([\w.]+)(?!\S)/,e=/\bprettyprint\b/,v=/\bprettyprinted\b/,w=/pre|xmp/i,t=/^code$/i,f=/^(?:pre|code|xmp)$/i,
+h={};g()}};typeof define==="function"&&define.amd&&define("google-code-prettify",[],function(){return Y})})();}()
+</script>
+<style>
+.pln{color:#1b181b}.str{color:#918b3b}.kwd{color:#7b59c0}.com{color:#9e8f9e}.typ{color:#516aec}.lit{color:#a65926}.clo,.opn,.pun{color:#1b181b}.tag{color:#ca402b}.atn{color:#a65926}.atv{color:#159393}.dec{color:#a65926}.var{color:#ca402b}.fun{color:#516aec}pre.prettyprint{background:#f7f3f7;color:#ab9bab;font-family:Menlo,Consolas,"Bitstream Vera Sans Mono","DejaVu Sans Mono",Monaco,monospace;font-size:12px;line-height:1.5;border:1px solid #d8cad8;padding:10px}ol.linenums{margin-top:0;margin-bottom:0}
+body{min-width:200px;max-width:850px;margin:0 auto;padding:30px;}.chapter-nav{font-size: 10pt;}a:link,a:visited{color:#00f}.codeblock_name,code,pre.prettyprint{font-family:Monaco,"Lucida Console",monospace}body{font-size:14pt}.codeblock_name,.math,.seealso,code{font-size:10pt}.codeblock{page-break-inside:avoid;padding-bottom:15px}.math{text-indent:0}pre.prettyprint{font-size:10pt;padding:10px;border-radius:10px;border:none;white-space:pre-wrap}.codeblock_name{margin-top:1.25em;display:block}a:link{text-decoration:none}a:link:not(.lit):hover{color:#00f;text-decoration:underline}a:link:active{color:red}h4{padding-right:1.25em}h4.noheading{margin-bottom:0}h1{text-align:center}code{padding:2px}pre{-moz-tab-size:4;-o-tab-size:4;tab-size:4}p:not(.notp){margin:0;text-indent:2em}.two-col{list-style-type:none}.two-col li:before{content:'-';padding:5px;margin-right:5px;color:orange;background-color:#fff;display:inline-block}@media print{body{font-size:10pt}pre.prettyprint{font-size:8pt}.seealso{font-size:9pt}.codeblock_name,.math,code{font-size:8pt}.math{text-indent:0}}
+/* Element Styles */
+
+img {
+    max-width: 100%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+p:not(.notp) {
+    text-indent: 0;
+    line-height: 1.3;
+}
+
+.section > p {
+    margin-bottom: 1.3rem;
+}
+
+li {
+    margin-bottom: 0.3rem;
+}
+
+pre {
+    -webkit-text-size-adjust: 100%;
+}
+
+/* Header Style */
+
+h4.noheading {
+    display: none;
+}
+
+.section:first-of-type > p {
+    margin-bottom: 0.25rem;
+    text-align: center;
+}
+</style>
+</head>
+<body onload="prettyPrint()">
+<section>
+<h1>Write your Own Proof-of-Work Blockchain</h1>
+<a name="1:1"><div class="section"><h4 class="noheading">1. </h4></a>
+<p>By: <a href="https://github.com/justinmeiners"><strong>Justin Meiners</strong></a>.
+</p>
+<p>View the final code and other resources in the <a href="https://github.com/justinmeiners/tiny-blockchain">GitHub repo</a>.
+</p>
+
+</div>
+<a name="1:2"><div class="section"><h4>2. Introduction</h4></a>
+<p>This article will teach you how to write a tiny proof-of-work blockchain,
+focusing on the Bitcoin implementation.
+I emphasize "proof-of-work" because that is the key innovation of Bitcoin.
+</p>
+<p>I wrote this for programmers who are curious about how crypto currency works.
+If you are a crypto currency enthusist you probably have seen article on the same topic.
+I hope mine is more clear, deep, and concise than those in the past.
+</p>
+<p>This project will be written in C, although it should be easy to translate to other languages.
+To start, create a new <code>blockchain.c</code> file to place the code in the article.
+You will also need to include the files <a href="src/sha-256.h">sha-256.h</a> and <a href="src/sha-256.c">sha-256.c</a>. (1)
+</p>
+<blockquote><p> <strong>Note:</strong> This is a <a href="https://en.wikipedia.org/wiki/Literate_programming">literate program</a>. This means you are reading the source code right now! Each piece of code from the project will be shown and explained thoroughly, so you can be sure nothing is left out. The final code was created by <a href="https://github.com/zyedidia/Literate">"weaving"</a> the blocks of code together.
+</p>
+</blockquote>
+
+</div>
+<a name="1:3"><div class="section"><h4>3. What is a Blockchain?</h4></a>
+<p>A blockchain is a data structure for storing a sequence of records (<strong>blocks</strong>) in a tamper-resistant way.
+It allows anyone to verify that records are in the right order and have not been modified.
+</p>
+<p>This is made possible by cryptographic <a href="https://en.wikipedia.org/wiki/Cryptographic_hash_function">hashes</a>
+which map large pieces of data to short checksums.
+The key feature of a hash is that its "one way".
+It's easy to calculate what comes out, impossible to know
+what data came in, and
+very difficult to find an alternative piece of data
+that produced the same output.
+</p>
+<p>(insert picture)
+</p>
+<p>Each block is divided into a <strong>header</strong> and <strong>contents</strong>.
+The contents is just arbitrary data.
+The header contains some metadata about the block and two hashes:
+</p>
+<ol>
+<li><p>The hash of the contents. This ensures that 
+   anyone with the header can check that the contents
+   do not change.
+</p>
+</li>
+<li><p>The hash of the previous block header.
+   This ensures that anyone with the header
+   can also check that <em>no preceding</em> block has changed.
+</p>
+</li>
+</ol>
+<p>Let's write a <code>struct</code> for storing the header:
+</p>
+
+<div class="codeblock">
+<span class="codeblock_name">{block header <a href="index.html#1:3">3</a>}</span>
+<pre class="prettyprint lang-c">
+typedef struct
+{
+    // Length of the data in the block
+    uint32_t contents_length;
+    // Hash of the block contents.
+    // Prevents contents from changing
+    // (in Bitcoin this would actually be the "merkle root")
+    uint8_t contents_hash[32];
+    // prevents previous data from changing
+    uint8_t previous_hash[32];
+
+    // pow for later
+<span class="nocode pln">    {proof-of-work entries, <a href="index.html#1:5">5</a>}</span>
+} block_header_t;
+
+</pre>
+
+
+<p class="seealso">Used in section <a href="index.html#1:8">8</a></p>
+</div>
+<p>32 bytes is the length of the Bitcoin <code>sha256</code> hashes.
+</p>
+<p>You may wonder how having the hash of the previous block
+can protect against changes much earlier in the chain.
+Remember that the previous block also has the hash of the header
+<em>before it</em>, so any changes would changes to its header would affect
+it, and so on in a cascading effect.
+</p>
+<p>(insert picture)
+</p>
+<p>Git version control is also based off this same idea.
+Commits include hashes of their state of the code, and hashes
+of the previous commit, so that repositories can ensure integrity.
+</p>
+<h2> Creating Blocks</h2>
+<p>Creating a block is very straightfoward.
+To make a new block we need some data for contents
+and a reference to a previous block header (or <code>NULL</code> for the "genesis" block.)
+</p>
+<p>We simply hash the contents and the previous block header and 
+assign it to the new header.
+</p>
+
+<div class="codeblock">
+<span class="codeblock_name">{build block <a href="index.html#1:3">3</a>}</span>
+<pre class="prettyprint lang-c">
+
+block_header_t build_block(const block_header_t* previous, const char* contents, uint64_t length)
+{
+    block_header_t header;
+    header.contents_length = length;
+
+    if (previous)
+    {
+        // calculate previous block header hash
+        calc_sha_256(header.previous_hash, previous, sizeof(block_header_t));
+    }
+    else
+    {
+        // genesis has no previous. just use zeroed hash
+        memset(header.previous_hash, 0, sizeof(header.previous_hash))
+    }
+    
+    // add data hash
+    calc_sha_256(header.contents_hash, contents, length);
+
+    // mining. disucssed later
+    mine_block(&amp;header);
+    return header;
+}
+</pre>
+
+
+<p class="seealso">Used in section <a href="index.html#1:8">8</a></p>
+</div>
+</div>
+<a name="1:4"><div class="section"><h4>4. What do you put into the blocks?</h4></a>
+<p>Blockchains can store any kind of data.
+In this project we will just be storing binary blobs.
+But, it can easily be modified to store other data.
+</p>
+<p>Bitcoin of course stores <a href="https://en.bitcoin.it/wiki/Transaction">financial transactions</a>.
+Instead of a hash of the whole block, the headers
+have the <a href="https://en.bitcoinwiki.org/wiki/Merkle_tree">Merkle Root hash</a>,
+which makes it easy to verify transactions are included in a block.
+But, this is outside the scope of this project.
+</p>
+
+</div>
+<a name="1:5"><div class="section"><h4>5. What is Proof of Work?</h4></a>
+<p>Blockchains can be useful record keeping devices among trusted groups, but its not clear
+how they can keep any kind of contested record, especially a record that stores money.
+If Alice doesn't have any block headers, then Bob can generate
+a blockchain containing any records he wants, and give it to Alice.
+She can verify its a proper blockchain, but how does she know it contains any records she cares about?
+</p>
+<p>Even if Alice has all the block headers, she has no way to decide
+which new blocks to add. All appear equally valid.
+</p>
+<p>This is the problem solved by proof-of-work. 
+It provides a simple rule that <em>anyone</em> can use to objectively determine
+whether a given blockchain is the one that is generally accepted. (2)
+</p>
+<p>Intead of allowing blocks to be created freely,
+proof-of-work requires that CPU resources be spent
+in order to create a block. 
+</p>
+<p>This is done by requiring that the hash of the block header
+be less than some .
+So a miner must continually modify the block
+until it produces a hash that is smaller than a target.
+</p>
+<p>But, the block header so far contains only immutable fields (the two hashes),
+so we need to add a few more that the miner can tweak to try to
+produce a different hash.
+</p>
+<p>Add the following fiels to the <code>block_header_t</code> structure.
+</p>
+
+<div class="codeblock">
+<span class="codeblock_name">{proof-of-work entries <a href="index.html#1:5">5</a>}</span>
+<pre class="prettyprint lang-c">
+
+// when this block started being mined
+uint32_t timestamp; 
+
+// nonce
+// this is adjusted by the miner
+// until a suitable hash is created
+uint32_t nonce;
+</pre>
+
+
+<p class="seealso">Used in section <a href="index.html#1:3">3</a></p>
+</div>
+<p>The <code>block_header_t</code> is now awfully close to the actual
+<a href="https://bitcoin.org/en/developer-reference#block-headers">Bitcoin Header</a>
+with just a few simplifications.
+</p>
+
+<div class="codeblock">
+<span class="codeblock_name">{mining <a href="index.html#1:5">5</a>}</span>
+<pre class="prettyprint lang-c">
+
+void mine_block(block_header_t* header)
+{
+    // set target
+    // this is the difficulty
+    uint8_t target[32];
+    memset(target, 0, sizeof(target));
+    target[2] = 0x1F;
+
+    while (1)
+    {
+        // MINING
+        // start of this mining round
+        header-&gt;timestamp = (uint64_t)time(NULL);
+
+        // adjust the nonce
+        // until the block header is &lt; the target hash
+        uint8_t block_hash[32];
+
+        for (uint32_t i = 0; i &lt; UNIT32_MAX; ++i)
+        {
+            header-&gt;nonce = i;
+            calc_sha_256(block_hash, header, sizeof(block_header_t));
+
+            if (memcmp(block_hash, target, sizeof(block_hash)) == -1)
+                // we found a good hash!
+                return;
+        }
+        // we expired the uint32 without finding a valid hash
+        // restart the time, and hope that this time + nonce
+        // combo will work
+    }
+
+    // this should never happen
+    assert(0);
+}
+</pre>
+
+
+<p class="seealso">Used in section <a href="index.html#1:8">8</a></p>
+</div>
+<p>So just to review. A valid block header is one
+which has a hash less than the target hash.
+To find one, a block producer adjusts the nonce,
+until it hashes into the valid range.
+</p>
+
+</div>
+<a name="1:6"><div class="section"><h4>6. Genesis Block</h4></a>
+<p>https://en.bitcoin.it/wiki/Genesis_block
+</p>
+<p><img src="img/thetimes.jpg" alt="the times 2009">
+</p>
+<p>https://satoshi.nakamotoinstitute.org
+</p>
+
+<div class="codeblock">
+<span class="codeblock_name">{genesis block <a href="index.html#1:6">6</a>}</span>
+<pre class="prettyprint lang-c">
+printf("creating genesis block...\n");
+char genesis_data[] = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
+block_header_t genesis = build_block(NULL, genesis_data, sizeof(genesis_data));
+</pre>
+
+
+<p class="seealso">Used in section <a href="index.html#1:8">8</a></p>
+</div>
+</div>
+<a name="1:7"><div class="section"><h4>7. Input Loop</h4></a>
+
+<div class="codeblock">
+<span class="codeblock_name">{input loop <a href="index.html#1:7">7</a>}</span>
+<pre class="prettyprint lang-c">
+block_header_t previous = genesis;
+while (!feof(stdin))
+{
+    // ask for more data to put
+    // in the next block
+    printf("enter block data: \n");
+    char line_buffer[LINE_MAX];
+    fgets(line_buffer, LINE_MAX, stdin);  
+
+    printf("creating block...\n");
+    uint64_t size = strnlen(line_buffer, LINE_MAX) + 1;
+    block_header_t header = build_block(&amp;previous, line_buffer, size);
+
+    // hash the resulting
+    // header, for display purposes
+    uint8_t test_hash[32];
+    calc_sha_256(test_hash, &amp;header, sizeof(block_header_t));
+
+    printf("nonce: %i hash: ", header.nonce);
+    fprint_hash(stdout, test_hash);
+    printf("\n");
+    
+    previous = header;
+}
+</pre>
+
+
+<p class="seealso">Used in section <a href="index.html#1:8">8</a></p>
+</div>
+</div>
+<a name="1:8"><div class="section"><h4>8. Utilties</h4></a>
+<p>This section contains boring bits of code
+not relevant to understanding the actual blockchain.
+</p>
+
+<div class="codeblock">
+<span class="codeblock_name">{print hashes <a href="index.html#1:8">8</a>}</span>
+<pre class="prettyprint lang-c">
+void fprint_hash(FILE* f, uint8_t* hash)
+{
+    fprintf(f, "0x");
+    for (int i = 0; i &lt; 32; ++i)
+        fprintf(f, "%02x", hash[i]);
+}
+</pre>
+
+
+
+</div>
+
+<div class="codeblock">
+<span class="codeblock_name">{<strong>blockchain.c</strong> <a href="index.html#1:8">8</a>}</span>
+<pre class="prettyprint lang-c">
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;stdint.h&gt;
+#include &lt;string.h&gt;
+#include &lt;time.h&gt;
+#include &lt;memory.h&gt;
+#include &lt;assert.h&gt;
+
+#include "sha-256.h"
+
+#define LINE_MAX 2048
+
+<span class="nocode pln">{print hashes, <a href="index.html#1:8">8</a>}</span>
+<span class="nocode pln">{block header, <a href="index.html#1:3">3</a>}</span>
+<span class="nocode pln">{build block, <a href="index.html#1:3">3</a>}</span>
+<span class="nocode pln">{mining, <a href="index.html#1:5">5</a>}</span>
+
+int main(int argc, const char* argv[])
+{
+<span class="nocode pln">    {genesis block, <a href="index.html#1:6">6</a>}</span>
+
+<span class="nocode pln">    {input loop, <a href="index.html#1:7">7</a>}</span>
+
+    // blocks aren't actually stored
+    // anywhere. We just keep on building the chain
+    // from the previous header.
+    return 1;
+}
+
+</pre>
+
+
+
+</div>
+</div>
+<a name="1:9"><div class="section"><h4>9. Learning More</h4></a>
+</div>
+<a name="1:10"><div class="section"><h4>10. Notes</h4></a>
+<p>(1) - Thanks to <a href="https://github.com/amosnier/sha-2">Alain Mosnier</a>
+(2) - 
+</p>
+
+</div>
+</body>

@@ -21,6 +21,7 @@ void fprint_hash(FILE* f, uint8_t* hash)
 }
 
 /* block header */
+// https://bitcoin.org/en/developer-reference#block-headers
 typedef struct
 {
     // Length of the data in the block
@@ -47,7 +48,6 @@ typedef struct
 
 
 /* build block */
-
 block_header_t build_block(const block_header_t* previous, const char* contents, uint64_t length)
 {
     block_header_t header;
@@ -73,34 +73,39 @@ block_header_t build_block(const block_header_t* previous, const char* contents,
 }
 
 /* mining */
-
 void mine_block(block_header_t* header)
 {
-    // set target
-    // this is the difficulty
+    /* target */
+    // this controls the difficulty.
+    // I arbitrarily chose this target
+    // feel free to try out others.
     uint8_t target[32];
     memset(target, 0, sizeof(target));
     target[2] = 0x1F;
+
 
     while (1)
     {
         // MINING
         // start of this mining round
-        header->timestamp = (uint64_t)time(NULL);
+        header->timestamp = (uint64_t)time(NULL); 
 
+        /* nonce search */
         // adjust the nonce
         // until the block header is < the target hash
         uint8_t block_hash[32];
-
+        
         for (uint32_t i = 0; i < UNIT32_MAX; ++i)
         {
             header->nonce = i;
             calc_sha_256(block_hash, header, sizeof(block_header_t));
-
+        
             if (memcmp(block_hash, target, sizeof(block_hash)) == -1)
                 // we found a good hash!
                 return;
         }
+
+
         // we expired the uint32 without finding a valid hash
         // restart the time, and hope that this time + nonce
         // combo will work
@@ -120,16 +125,16 @@ int main(int argc, const char* argv[])
 
 
     /* input loop */
+    int block_no = 0;
     block_header_t previous = genesis;
     while (!feof(stdin))
     {
         // ask for more data to put
         // in the next block
-        printf("enter block data: \n");
         char line_buffer[LINE_MAX];
         fgets(line_buffer, LINE_MAX, stdin);  
     
-        printf("creating block...\n");
+        printf("creating block %i...\n", block_no);
         uint64_t size = strnlen(line_buffer, LINE_MAX) + 1;
         block_header_t header = build_block(&previous, line_buffer, size);
     
@@ -138,17 +143,18 @@ int main(int argc, const char* argv[])
         uint8_t test_hash[32];
         calc_sha_256(test_hash, &header, sizeof(block_header_t));
     
-        printf("nonce: %i hash: ", header.nonce);
+        printf("done. nonce: %i hash: ", header.nonce);
         fprint_hash(stdout, test_hash);
         printf("\n");
         
         previous = header;
+        ++block_no;
     }
-
-
+    
     // blocks aren't actually stored
     // anywhere. We just keep on building the chain
     // from the previous header.
+
     return 1;
 }
 

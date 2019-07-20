@@ -1,6 +1,6 @@
-# Write your own POW Blockchain
+# Write your own Blockchain
 
-https://bitcoin.org/en/developer-reference#block-headers
+
 @code_type c .c
 @comment_type /* %s */
 @add_css main.css
@@ -17,14 +17,13 @@ View the final code and other resources in the [GitHub repo](https://github.com/
 
 This article will teach you how to write a tiny proof-of-work blockchain,
 focusing on the Bitcoin implementation.
-I will emphasize "proof-of-work" because this is the key innovation of Bitcoin
-that allows blockchains to store information in an "objectively" verifable way.
+I emphasize "proof-of-work" because as we shall see, this is the key innovation that allows Bitcoin
+to store information in an "objectively" verifiable way.
+I wrote this mainly for programmers who are curious about how cryptocurrency works.
+If you are already an enthusist you probably have seen similar articles, although
+I believe mine is better focused on the essentials.
 
-I wrote this mainly for programmers who are curious about how crypto currency works.
-If you are a crypto currency enthusist you probably have seen article on the same topic.
-I aim to make mine more clear and concise than those in the past.
-
-This project will be written in C, although it should be easy to translate to other languages.
+This project will be written in C, although it is easy to translate to other languages.
 To start, create a new `blockchain.c` file to place the code in the article.
 You will also need to include the files [sha-256.h](src/sha-256.h) and [sha-256.c](src/sha-256.c)(1) for
 hashes (or use your language's library).
@@ -35,34 +34,47 @@ hashes (or use your language's library).
 
 @s What is a Blockchain?
 
-A blockchain is a data structure for storing a sequence of records (**blocks**) in a tamper-resistant way.
-It allows anyone to verify that records are in the right order and have not been modified.
+A blockchain is a data structure for storing an ordered sequence of records (**blocks**) in a tamper-resistant way.
+Given some small header information one can verify whether a given record:
 
-This is made possible by cryptographic [hashes](https://en.wikipedia.org/wiki/Cryptographic_hash_function)
-which map large pieces of data to short checksums.
-The essential property of a hash is that its "one way".
-It's easy to calculate output for an input, impossible to know
+1. has been modified
+2. belongs in the sequence
+3. is in the correct order, relative to the other records
+
+Suppose a news outlet wanted the public to be able to verify
+whether a given paper was actually published by them, or whether it was fake.
+They could publish each paper on their website, but this is a lot of data
+to upload and download for simple verification.
+Better yet they could publish the **hash** for each paper which is just
+a few bytes.
+
+You are probably familiar with [hashes](https://en.wikipedia.org/wiki/Cryptographic_hash_function), but just to review
+a hash is a function which maps large pieces of data to short checksums.
+The essential property of a hash is that its *one way*.
+It's *easy* to calculate output for an input, *impossible* to know
 what input produced a given output, and
-very difficult to find an alternative piece of data
+*very difficult* to find an alternative piece of data
 that produces the same output.
 
-(insert picture)
+![hash function](img/hash.png)
 
-Each block is divided into a **header** and **contents**.
-The contents are just arbitrary data.
-The header contains some metadata about the block and two hashes:
+The list of hashes is a good start, but it only gives us property #1, 
+It tells us nothing about how the papers relate to each other.
+Are they out of order? Has an extra one been inserted?
+A blockchain verifies these kinds of constraints.
 
-1. The hash of the contents. This ensures that 
-   anyone with the header can check that the contents
-   do not change.
+Each block is made up of a **header** and **contents**.
+The **contents** are just arbitrary data to be stored in the chain.
+The **header** contains some info about the block and two hashes:
+
+1. The hash of the contents.
 
 2. The hash of the previous block header.
    This ensures that anyone with the header
    can also check that *no preceding* block has changed.
 
-Let's write a `struct` for storing the header:
-
 --- block header
+// https://bitcoin.org/en/developer-reference#block-headers
 typedef struct
 {
     // Length of the data in the block
@@ -80,31 +92,33 @@ typedef struct
 
 ---
 
-32 is then number of bytes in a `sha256` hash.
+(`32` is then number of bytes in a `sha256` hash.)
 
-You may wonder how having the hash of the previous block
+You may wonder how the hash of the previous block
 can protect against changes much earlier in the chain.
 Remember that the previous block also has the hash of the header
 *before it*, so any changes would changes to its header would affect
-it, and so on in a cascading effect.
+it, and so on in a domino effect.
 
-(insert picture)
+![blockchain](img/blockchain.gif)
 
-Git version control is also based off this same idea.
-Commits include hashes of their state of the code, and hashes
-of the previous commit, so that repositories can ensure integrity.
+If you use Git version control, you already familiar with this idea.
+Each commit is a hash of the state of the code, and also the hash
+of the previous commit. This ensures that differing
+histories result in different commit hashes.
 
-## Creating Blocks
+@s Creating Blocks
 
-Creating a block is very straightfoward.
-To make a new block we need some data for contents
-and a reference to a previous block header (or `NULL` for the "genesis" block.)
+Creating a block and adding it to the chain is very straightfoward.
+We need some data for contents.
+In this project we will be storing blobs of text,
+although you could easily store other binary data.
 
+The block also needs a reference to a previous block header (or `NULL` for the "genesis" block.)
 We simply hash the contents and the previous block header and 
 assign it to the new header.
 
 --- build block
-
 block_header_t build_block(const block_header_t* previous, const char* contents, uint64_t length)
 {
     block_header_t header;
@@ -130,47 +144,75 @@ block_header_t build_block(const block_header_t* previous, const char* contents,
 }
 ---
 
-@s What do you put into the blocks?
-
-Blockchains can store any kind of data.
-In this project we will just be storing binary blobs.
-But, it can easily be modified to store other data.
-
-Bitcoin of course stores [financial transactions](https://en.bitcoin.it/wiki/Transaction).
-Instead of a hash of the whole block, the headers
-have the [Merkle Root hash](https://en.bitcoinwiki.org/wiki/Merkle_tree),
+So far we have followed Bitcoin closely. But
+just so you know there are a few differences.
+Bitcoin of course stores financial transactions as
+[UTXOs](https://en.bitcoin.it/wiki/Transaction).
+The contents of the block are a bunch of these transactions.
+Also, instead of a hash of the whole contents, the [headers](https://bitcoin.org/en/developer-reference#block-headers)
+contain a [Merkle Root hash](https://en.bitcoinwiki.org/wiki/Merkle_tree),
 which makes it easy to verify transactions are included in a block.
 But, this is outside the scope of this project.
 
-@s What is Proof of Work?
+@s What is proof-of-work?
 
-Blockchains can be useful record keeping devices among trusted groups, but its not clear
-how they can keep any kind of contested record, especially a record that stores money.
-If Alice doesn't have any block headers, then Bob can generate
-a blockchain containing any records he wants, and give it to Alice.
-She can verify its a proper blockchain, but how does she know it contains any records she cares about?
+If you have been paying attention you may be skeptical about how
+useful blockchains are on their own.
+Is this really much better than a list of hashes?
+To verify a block, you need to have headers, which you must have received from an authority you trust.
+A malicious person could give you false headers
+you would have no way to tell it wasn't the *real thing*.
+They could also take a blockchain you trust, add new headers
+to it, and the new ones would look just as valid as old one!
 
-Even if Alice has all the block headers, she has no way to decide
-which new blocks to add. All appear equally valid.
-
+So, blockchains can be useful record keeping devices among trusted groups, but its not clear
+at this point how they can keep any kind of contested record, especially a record that stores money.
 This is the problem solved by **proof-of-work**. 
 It provides a simple rule that *anyone* can use to objectively (2) determine
-whether a given blockchain is the one that is generally accepted. (3)
+whether a given blockchain is the one that is the right one. (3)
 
-Intead of allowing blocks to be created freely,
-proof-of-work requires that CPU resources be spent
-in order to create a block. 
+Instead of allowing blocks to be created freely,
+proof-of-work requires that CPU resources be spent,
+by solving a problem, in order to create a block.
+This process is called **mining**.
+Proof that the CPU resources were spent 
+is included in the block itself, so that
+anyone can verify that the work was actually done.
+Hence the term "proof-of-work".
 
-This is done by requiring that the hash of the block header
-be less than some .
-So a miner must continually modify the block
-until it produces a hash that is smaller than a target.
+In the Bitcoin network, computers across the world
+are constantly trying to produce blocks, but they are
+limit by how fast their CPUs are. Once they have spent
+the required CPU time, they can produce a block.
 
-But, the block header so far contains only immutable fields (the two hashes),
-so we need to add a few more that the miner can tweak to try to
-produce a different hash.
+This makes the chain verifiable. The valid Bitcoin chain
+is always *the longest chain.*
+To add a new block, one has to spend CPU resources for just that block.
+To add two blocks, twice the amount of work must be done, and 
+so on. 
 
-Add the following fiels to the `block_header_t` structure.
+So making a false chain requires spending as much CPU time
+as all the computers in the world have 
+
+@s Mining
+
+We add an additional requirement to the chain,
+which is that the hash of any block header must be less than
+some **target** hash.
+In other words `sha256(header) < T`.
+By "less than" we mean the usual byte by byte lexographic
+comparsion, like alphabetical order.
+(For example `0000 0001` is less than `0000 0010`)
+
+### Nonce
+
+Right now the header is fixed, it contains only two immutable fields,
+the contents hash, and the previous block hash.
+So how can we get a hash below the target?
+We add a few additional fields to the header that can be freely modified
+called the **nonce** and **timestamp**.
+
+Add the following to the `block_header_t` structure from before.
 
 --- proof-of-work entries
 
@@ -183,39 +225,59 @@ uint32_t timestamp;
 uint32_t nonce;
 ---
 
-The `block_header_t` is now awfully close to the actual
-[Bitcoin Header](https://bitcoin.org/en/developer-reference#block-headers)
-with just a few simplifications.
+
+To make a block header valid, the nonce
+is adjusted until the header hashes in the valid range.
+This adjustment process is called mining.
+There is no rhyme or reason to guessing the nonce.
+The miner just tries as many as it can!
+
+Let's write a loop that just tries numbers in order:
+(It will be placed in a mining function below.)
+
+--- nonce search
+// adjust the nonce
+// until the block header is < the target hash
+uint8_t block_hash[32];
+
+for (uint32_t i = 0; i < UNIT32_MAX; ++i)
+{
+    header->nonce = i;
+    calc_sha_256(block_hash, header, sizeof(block_header_t));
+
+    if (memcmp(block_hash, target, sizeof(block_hash)) == -1)
+        // we found a good hash!
+        return;
+}
+---
+
+As you can imagine, this brute force operation
+of adjusting numbers, and hashing again
+can take a lot of CPU time!
+
+### Timestamp
+
+It's possible that the miner tries all the numbers that can be stored in a `uint32` (up to `4294967295`)
+and never finds a valid hash.
+This is what the **timestamp** field is for.
+If all numbers have been tried,
+the timestamp is reset and it starts again.
+
+Here is the complete mining function:
 
 --- mining
-
 void mine_block(block_header_t* header)
 {
-    // set target
-    // this is the difficulty
-    uint8_t target[32];
-    memset(target, 0, sizeof(target));
-    target[2] = 0x1F;
+    @{target}
 
     while (1)
     {
         // MINING
         // start of this mining round
-        header->timestamp = (uint64_t)time(NULL);
+        header->timestamp = (uint64_t)time(NULL); 
 
-        // adjust the nonce
-        // until the block header is < the target hash
-        uint8_t block_hash[32];
+        @{nonce search}
 
-        for (uint32_t i = 0; i < UNIT32_MAX; ++i)
-        {
-            header->nonce = i;
-            calc_sha_256(block_hash, header, sizeof(block_header_t));
-
-            if (memcmp(block_hash, target, sizeof(block_hash)) == -1)
-                // we found a good hash!
-                return;
-        }
         // we expired the uint32 without finding a valid hash
         // restart the time, and hope that this time + nonce
         // combo will work
@@ -226,40 +288,50 @@ void mine_block(block_header_t* header)
 }
 ---
 
-So just to review. A valid block header is one
-which has a hash less than the target hash.
-To find one, a block producer adjusts the nonce,
-until it hashes into the valid range.
+### Target
 
+The target `T` can be any hash. However, the smaller (in ordering) it is
+, the more difficult it is to find a valid hash, because there
+are a fewer hashes within the valid range.
+This allows Bitcoin to adjust mining difficulty.
 
-@s Genesis Block
-
-https://en.bitcoin.it/wiki/Genesis_block
-
-![the times 2009](img/thetimes.jpg)
-
-
-https://satoshi.nakamotoinstitute.org
-
---- genesis block
-printf("creating genesis block...\n");
-char genesis_data[] = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
-block_header_t genesis = build_block(NULL, genesis_data, sizeof(genesis_data));
+--- target
+// this controls the difficulty.
+// I arbitrarily chose this target
+// feel free to try out others.
+uint8_t target[32];
+memset(target, 0, sizeof(target));
+target[2] = 0x1F;
 ---
 
-@s Input Loop
+@s Producing Blocks
+
+In the real Bitcoin network, miners
+are connected together in a peer-to-peer network.
+They receive transactions from other client to include in blocks, and
+compete with each other to produce blocks.
+
+Our tiny blockchain, we won't have any network or peers,
+and will just run on our computer.
+However we still want to get a real proof-of-work effect
+so that the longer you run your computer
+the more secure the chain becomes!
+
+We will do this by accepting text input from stdin, and encoding
+each line in a block.
+The longer you run your computer, the more secure the chain becomes!
 
 --- input loop
+int block_no = 0;
 block_header_t previous = genesis;
 while (!feof(stdin))
 {
     // ask for more data to put
     // in the next block
-    printf("enter block data: \n");
     char line_buffer[LINE_MAX];
     fgets(line_buffer, LINE_MAX, stdin);  
 
-    printf("creating block...\n");
+    printf("creating block %i...\n", block_no);
     uint64_t size = strnlen(line_buffer, LINE_MAX) + 1;
     block_header_t header = build_block(&previous, line_buffer, size);
 
@@ -268,17 +340,38 @@ while (!feof(stdin))
     uint8_t test_hash[32];
     calc_sha_256(test_hash, &header, sizeof(block_header_t));
 
-    printf("nonce: %i hash: ", header.nonce);
+    printf("done. nonce: %i hash: ", header.nonce);
     fprint_hash(stdout, test_hash);
     printf("\n");
     
     previous = header;
+    ++block_no;
 }
+
+// blocks aren't actually stored
+// anywhere. We just keep on building the chain
+// from the previous header.
+---
+
+@s Genesis Block
+
+To start off our blockchain we need a [genesis block](https://en.bitcoin.it/wiki/Genesis_block).
+We will use the same block contents that [Satoshi](https://satoshi.nakamotoinstitute.org)
+used in the real Bitcoin chain,
+a headline from a 2009 English newspaper.
+
+![the times 2009](img/thetimes.jpg)
+
+> "This was probably intended as proof that the block was created on or after January 3, 2009, as well as a comment on the instability caused by fractional-reserve banking."
+
+--- genesis block
+printf("creating genesis block...\n");
+char genesis_data[] = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
+block_header_t genesis = build_block(NULL, genesis_data, sizeof(genesis_data));
 ---
 
 
 @s Utilties
-
 
 This section contains boring bits of code
 not relevant to understanding the actual blockchain.
@@ -318,16 +411,13 @@ int main(int argc, const char* argv[])
     @{genesis block}
 
     @{input loop}
-
-    // blocks aren't actually stored
-    // anywhere. We just keep on building the chain
-    // from the previous header.
     return 1;
 }
 
 ---
 
 @s Learning More
+
 
 
 @s Notes

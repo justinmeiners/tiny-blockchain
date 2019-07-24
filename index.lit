@@ -194,6 +194,8 @@ so on.
 So making a false chain requires spending as much CPU time
 as all the computers in the world have 
 
+> "Bitcoin can thus be understood as a technology that converts electricity to truthful records through the expenditure of processing power." - Safedean Ammous.
+
 @s Mining
 
 We add an additional requirement to the chain,
@@ -304,7 +306,7 @@ memset(target, 0, sizeof(target));
 target[2] = 0x1F;
 ---
 
-@s Producing Blocks
+@s Production Loop
 
 In the real Bitcoin network, miners
 are connected together in a peer-to-peer network.
@@ -416,16 +418,30 @@ int main(int argc, const char* argv[])
 
 ---
 
-@s Learning More
+At this point, you should have all the code to compile the project.
+If you are not sure where something belongs, follow the references
+or refer to the [final code](src/blockchain.c)
 
+@s Running
+
+Run the program by inputting a file to `stdin`.
+
+    ./cat headlines.txt | blockchain 
+    
+
+If the program produces blocks too slowly, or quickly, adjust the 
+**target** variable.
 
 
 @s Notes
 
 
+https://blog.sia.tech/the-state-of-cryptocurrency-mining-538004a37f9b
 
 (1) - Thanks to [Alain Mosnier](https://github.com/amosnier/sha-2)
 (2) - 
 (3) - "Objectively" is being used a little loosely here. Of course, the objective
       reality is created an alter
 (4) https://stackoverflow.com/questions/46192377/why-is-git-not-considered-a-block-chain
+
+

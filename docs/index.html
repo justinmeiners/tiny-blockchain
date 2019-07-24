@@ -290,6 +290,9 @@ so on.
 <p>So making a false chain requires spending as much CPU time
 as all the computers in the world have 
 </p>
+<blockquote><p> "Bitcoin can thus be understood as a technology that converts electricity to truthful records through the expenditure of processing power." - Safedean Ammous.
+</p>
+</blockquote>
 
 </div>
 <a name="1:6"><div class="section"><h4>6. Mining</h4></a>
@@ -422,7 +425,7 @@ target[2] = 0x1F;
 
 </div>
 </div>
-<a name="1:7"><div class="section"><h4>7. Producing Blocks</h4></a>
+<a name="1:7"><div class="section"><h4>7. Production Loop</h4></a>
 <p>In the real Bitcoin network, miners
 are connected together in a peer-to-peer network.
 They receive transactions from other client to include in blocks, and
@@ -555,8 +558,21 @@ int main(int argc, const char* argv[])
 
 
 </div>
+<p>At this point, you should have all the code to compile the project.
+If you are not sure where something belongs, follow the references
+or refer to the <a href="src/blockchain.c">final code</a>
+</p>
+
 </div>
-<a name="1:10"><div class="section"><h4>10. Learning More</h4></a>
+<a name="1:10"><div class="section"><h4>10. Running</h4></a>
+<p>Run the program by inputting a file to <code>stdin</code>.
+</p>
+<pre><code>./cat headlines.txt | blockchain 
+
+</code></pre><p>If the program produces blocks too slowly, or quickly, adjust the 
+<strong>target</strong> variable.
+</p>
+
 </div>
 <a name="1:11"><div class="section"><h4>11. Notes</h4></a>
 <p>(1) - Thanks to <a href="https://github.com/amosnier/sha-2">Alain Mosnier</a>

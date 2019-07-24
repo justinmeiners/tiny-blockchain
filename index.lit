@@ -20,12 +20,12 @@ focusing on the Bitcoin implementation.
 I emphasize "proof-of-work" because as we shall see, this is the key innovation that allows Bitcoin
 to store information in an "objectively" verifiable way.
 I wrote this mainly for programmers who are curious about how cryptocurrency works.
-If you are already an enthusist you probably have seen similar articles, although
-I believe mine is better focused on the essentials.
+If you are already an enthusist you probably have seen similar articles.
+I hope to bring a valuable perspective by focusing on the essentials.
 
 This project will be written in C, although it is easy to translate to other languages.
-To start, create a new `blockchain.c` file to place the code in the article.
-You will also need to include the files [sha-256.h](src/sha-256.h) and [sha-256.c](src/sha-256.c)(1) for
+To start, create a new `.c` file for the code in the article.
+You will also need to include [sha-256.h](src/sha-256.h) and [sha-256.c](src/sha-256.c)(1) for
 hashes (or use your language's library).
 
 > **Note:** This is a [literate program](https://en.wikipedia.org/wiki/Literate_programming).
@@ -41,16 +41,16 @@ Given some small header information one can verify whether a given record:
 2. belongs in the sequence
 3. is in the correct order, relative to the other records
 
-Suppose a news outlet wanted the public to be able to verify
-whether a given paper was actually published by them, or whether it was fake.
+Suppose a news outlet wanted the public to be able to verify the history of papers
+they had published, so that anyone could check whether a given paper was fake.
 They could publish each paper on their website, but this is a lot of data
 to upload and download for simple verification.
-Better yet they could publish the **hash** for each paper which is just
+Better yet they could publish the **hash** of each paper which is just
 a few bytes.
 
 You are probably familiar with [hashes](https://en.wikipedia.org/wiki/Cryptographic_hash_function), but just to review
 a hash is a function which maps large pieces of data to short checksums.
-The essential property of a hash is that its *one way*.
+The essential property of a hash is that it's *one way*.
 It's *easy* to calculate output for an input, *impossible* to know
 what input produced a given output, and
 *very difficult* to find an alternative piece of data
@@ -58,10 +58,20 @@ that produces the same output.
 
 ![hash function](img/hash.png)
 
-The list of hashes is a good start, but it only gives us property #1, 
+To verify a piece of data, it can be hashed, and compared against a trusted hash.
+Since its extremely unlikely that different data hashes the same,
+if they match, we have good reason to believe that the data is valid.
+
+So if we had a hash of a newspaper, from a source we trusted, we could check property #1,
+that it had not been modified.
+But, this doesn't tell us about the relationship of that individual paper to the whole.
+
+Publishing a list of newspaper hashes is a good start, but on its own it only guarentees property #1, 
 It tells us nothing about how the papers relate to each other.
 Are they out of order? Has an extra one been inserted?
-A blockchain verifies these kinds of constraints.
+Knowledge of the full hash list could tell us some of this information,
+but blockchains take things a step further by cryptographically ensuring
+that these constraints hold.
 
 Each block is made up of a **header** and **contents**.
 The **contents** are just arbitrary data to be stored in the chain.
@@ -105,7 +115,7 @@ it, and so on in a domino effect.
 If you use Git version control, you already familiar with this idea.
 Each commit is a hash of the state of the code, and also the hash
 of the previous commit. This ensures that differing
-histories result in different commit hashes.
+histories result in different commit hashes, even when the code is the same.
 
 @s Creating Blocks
 

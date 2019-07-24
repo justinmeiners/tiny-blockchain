@@ -92,12 +92,12 @@ focusing on the Bitcoin implementation.
 I emphasize "proof-of-work" because as we shall see, this is the key innovation that allows Bitcoin
 to store information in an "objectively" verifiable way.
 I wrote this mainly for programmers who are curious about how cryptocurrency works.
-If you are already an enthusist you probably have seen similar articles, although
-I believe mine is better focused on the essentials.
+If you are already an enthusist you probably have seen similar articles.
+I hope to bring a valuable perspective by focusing on the essentials.
 </p>
 <p>This project will be written in C, although it is easy to translate to other languages.
-To start, create a new <code>blockchain.c</code> file to place the code in the article.
-You will also need to include the files <a href="src/sha-256.h">sha-256.h</a> and <a href="src/sha-256.c">sha-256.c</a>(1) for
+To start, create a new <code>.c</code> file for the code in the article.
+You will also need to include <a href="src/sha-256.h">sha-256.h</a> and <a href="src/sha-256.c">sha-256.c</a>(1) for
 hashes (or use your language's library).
 </p>
 <blockquote><p> <strong>Note:</strong> This is a <a href="https://en.wikipedia.org/wiki/Literate_programming">literate program</a>.
@@ -119,16 +119,16 @@ Given some small header information one can verify whether a given record:
 <li>is in the correct order, relative to the other records
 </li>
 </ol>
-<p>Suppose a news outlet wanted the public to be able to verify
-whether a given paper was actually published by them, or whether it was fake.
+<p>Suppose a news outlet wanted the public to be able to verify the history of papers
+they had published, so that anyone could check whether a given paper was fake.
 They could publish each paper on their website, but this is a lot of data
 to upload and download for simple verification.
-Better yet they could publish the <strong>hash</strong> for each paper which is just
+Better yet they could publish the <strong>hash</strong> of each paper which is just
 a few bytes.
 </p>
 <p>You are probably familiar with <a href="https://en.wikipedia.org/wiki/Cryptographic_hash_function">hashes</a>, but just to review
 a hash is a function which maps large pieces of data to short checksums.
-The essential property of a hash is that its <em>one way</em>.
+The essential property of a hash is that it's <em>one way</em>.
 It's <em>easy</em> to calculate output for an input, <em>impossible</em> to know
 what input produced a given output, and
 <em>very difficult</em> to find an alternative piece of data
@@ -136,10 +136,20 @@ that produces the same output.
 </p>
 <p><img src="img/hash.png" alt="hash function">
 </p>
-<p>The list of hashes is a good start, but it only gives us property #1, 
+<p>To verify a piece of data, it can be hashed, and compared against a trusted hash.
+Since its extremely unlikely that different data hashes the same,
+if they match, we have good reason to believe that the data is valid.
+</p>
+<p>So if we had a hash of a newspaper, from a source we trusted, we could check property #1,
+that it had not been modified.
+But, this doesn't tell us about the relationship of that individual paper to the whole.
+</p>
+<p>Publishing a list of newspaper hashes is a good start, but on its own it only guarentees property #1, 
 It tells us nothing about how the papers relate to each other.
 Are they out of order? Has an extra one been inserted?
-A blockchain verifies these kinds of constraints.
+Knowledge of the full hash list could tell us some of this information,
+but blockchains take things a step further by cryptographically ensuring
+that these constraints hold.
 </p>
 <p>Each block is made up of a <strong>header</strong> and <strong>contents</strong>.
 The <strong>contents</strong> are just arbitrary data to be stored in the chain.
@@ -193,7 +203,7 @@ it, and so on in a domino effect.
 <p>If you use Git version control, you already familiar with this idea.
 Each commit is a hash of the state of the code, and also the hash
 of the previous commit. This ensures that differing
-histories result in different commit hashes.
+histories result in different commit hashes, even when the code is the same.
 </p>
 
 </div>
@@ -575,6 +585,8 @@ or refer to the <a href="src/blockchain.c">final code</a>
 
 </div>
 <a name="1:11"><div class="section"><h4>11. Notes</h4></a>
+<p>https://blog.sia.tech/the-state-of-cryptocurrency-mining-538004a37f9b
+</p>
 <p>(1) - Thanks to <a href="https://github.com/amosnier/sha-2">Alain Mosnier</a>
 (2) - 
 (3) - "Objectively" is being used a little loosely here. Of course, the objective

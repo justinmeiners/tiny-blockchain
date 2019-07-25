@@ -199,13 +199,13 @@ The <strong>header</strong> contains some info about the block and two hashes:
 <pre class="prettyprint lang-c">
 typedef struct
 {
-    // Length of the data in the block
+    /* Length of the data in the block */
     uint32_t contents_length;
-    // Hash of the block contents.
-    // Prevents contents from changing
-    // (in Bitcoin this would actually be the "merkle root")
+    /* Hash of the block contents.
+       Prevents contents from changing
+       (in Bitcoin this would actually be the "merkle root" */
     uint8_t contents_hash[32];
-    // prevents previous data from changing
+    /* prevents previous data from changing */
     uint8_t previous_hash[32];
 
 <span class="nocode pln">    {proof-of-work entries, <a href="index.html#1:7">7</a>}</span>
@@ -269,19 +269,19 @@ block_header_t build_block(const block_header_t* previous, const char* contents,
 
     if (previous)
     {
-        // calculate previous block header hash
+        /* calculate previous block header hash */
         calc_sha_256(header.previous_hash, previous, sizeof(block_header_t));
     }
     else
     {
-        // genesis has no previous. just use zeroed hash
+        /* genesis has no previous. just use zeroed hash */
         memset(header.previous_hash, 0, sizeof(header.previous_hash));
     }
     
-    // add data hash
+    /* add data hash */
     calc_sha_256(header.contents_hash, contents, length);
 
-    // mining. disucssed later
+    /* mining. disucssed later */
     mine_block(&amp;header);
     return header;
 }
@@ -381,12 +381,14 @@ But in our project we will use a constant target.
 <div class="codeblock">
 <span class="codeblock_name">{target <a href="index.html#1:7">7</a>}</span>
 <pre class="prettyprint lang-c">
-// this controls the difficulty.
-// I arbitrarily chose this target
-// feel free to try out others.
+/* this controls the difficulty.
+   I chose this target because it works well on my computer.
+   feel free to try out others. */
+
 uint8_t target[32];
 memset(target, 0, sizeof(target));
 target[2] = 0x0F;
+
 /* too hard?: try target[2] = 0xFF
    too easy?: try target[2] = 0x01 */
 </pre>
@@ -407,12 +409,12 @@ These are called the <strong>nonce</strong> and <strong>timestamp</strong>.
 <div class="codeblock">
 <span class="codeblock_name">{proof-of-work entries <a href="index.html#1:7">7</a>}</span>
 <pre class="prettyprint lang-c">
-// when this block started being mined
+/* when this block started being mined */
 uint32_t timestamp; 
 
-// nonce
-// this is adjusted by the miner
-// until a suitable hash is created
+/* nonce.
+   this is adjusted by the miner,
+   until a suitable hash is found */
 uint32_t nonce;
 </pre>
 
@@ -473,18 +475,16 @@ void mine_block(block_header_t* header)
 
     while (1)
     {
-        // MINING
-        // start of this mining round
+        /* MINING: start of the mining round */
         header-&gt;timestamp = (uint64_t)time(NULL); 
 
 <span class="nocode pln">        {nonce search, <a href="index.html#1:7">7</a>}</span>
-
-        // we expired the uint32 without finding a valid hash
-        // restart the time, and hope that this time + nonce
-        // combo will work
+ 
+        /* The uint32 expired without finding a valid hash.
+           Restart the time, and hope that this time + nonce combo works. */
     }
 
-    // this should never happen
+    /* this should never happen */
     assert(0);
 }
 </pre>
@@ -559,7 +559,7 @@ while (!feof(stdin))
     char line_buffer[LINE_MAX];
     fgets(line_buffer, LINE_MAX, stdin);  
 
-    printf("creating block %i...\n", block_no);
+    printf("creating block %i: ", block_no);
     printf("%s\n", line_buffer);
     uint64_t size = strnlen(line_buffer, LINE_MAX) + 1;
     block_header_t header = build_block(&amp;previous, line_buffer, size);
@@ -644,8 +644,7 @@ Run the program by inputting the file to <code>stdin</code>.
 <pre><code>cat  ./gorgias.txt | ./blockchain 
 </code></pre><pre><code>creating genesis block...
 done. nonce: 427455 hash: 0x000003e9ea9bb66eae1b34a4a1b482f3fcf0ee1ca0589ae16de8a6c9a410285f
-creating block 0...
-The Project Gutenberg EBook of Gorgias, by Plato
+creating block 0: The Project Gutenberg EBook of Gorgias, by Plato
 </code></pre><p>If the program produces blocks too slowly, or quickly, adjust the 
 <strong>target</strong> variable.
 </p>

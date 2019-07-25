@@ -23,22 +23,22 @@ void fprint_hash(FILE* f, uint8_t* hash)
 /* block header */
 typedef struct
 {
-    // Length of the data in the block
+    /* Length of the data in the block */
     uint32_t contents_length;
-    // Hash of the block contents.
-    // Prevents contents from changing
-    // (in Bitcoin this would actually be the "merkle root")
+    /* Hash of the block contents.
+       Prevents contents from changing
+       (in Bitcoin this would actually be the "merkle root" */
     uint8_t contents_hash[32];
-    // prevents previous data from changing
+    /* prevents previous data from changing */
     uint8_t previous_hash[32];
 
     /* proof-of-work entries */
-    // when this block started being mined
+    /* when this block started being mined */
     uint32_t timestamp; 
     
-    // nonce
-    // this is adjusted by the miner
-    // until a suitable hash is created
+    /* nonce.
+       this is adjusted by the miner,
+       until a suitable hash is found */
     uint32_t nonce;
 
 } block_header_t;
@@ -48,20 +48,21 @@ typedef struct
 void mine_block(block_header_t* header)
 {
     /* target */
-    // this controls the difficulty.
-    // I arbitrarily chose this target
-    // feel free to try out others.
+    /* this controls the difficulty.
+       I chose this target because it works well on my computer.
+       feel free to try out others. */
+    
     uint8_t target[32];
     memset(target, 0, sizeof(target));
     target[2] = 0x0F;
+    
     /* too hard?: try target[2] = 0xFF
        too easy?: try target[2] = 0x01 */
 
 
     while (1)
     {
-        // MINING
-        // start of this mining round
+        /* MINING: start of the mining round */
         header->timestamp = (uint64_t)time(NULL); 
 
         /* nonce search */
@@ -78,13 +79,12 @@ void mine_block(block_header_t* header)
                 return;
         }
 
-
-        // we expired the uint32 without finding a valid hash
-        // restart the time, and hope that this time + nonce
-        // combo will work
+ 
+        /* The uint32 expired without finding a valid hash.
+           Restart the time, and hope that this time + nonce combo works. */
     }
 
-    // this should never happen
+    /* this should never happen */
     assert(0);
 }
 
@@ -96,19 +96,19 @@ block_header_t build_block(const block_header_t* previous, const char* contents,
 
     if (previous)
     {
-        // calculate previous block header hash
+        /* calculate previous block header hash */
         calc_sha_256(header.previous_hash, previous, sizeof(block_header_t));
     }
     else
     {
-        // genesis has no previous. just use zeroed hash
+        /* genesis has no previous. just use zeroed hash */
         memset(header.previous_hash, 0, sizeof(header.previous_hash));
     }
     
-    // add data hash
+    /* add data hash */
     calc_sha_256(header.contents_hash, contents, length);
 
-    // mining. disucssed later
+    /* mining. disucssed later */
     mine_block(&header);
     return header;
 }
@@ -143,7 +143,7 @@ int main(int argc, const char* argv[])
         char line_buffer[LINE_MAX];
         fgets(line_buffer, LINE_MAX, stdin);  
     
-        printf("creating block %i...\n", block_no);
+        printf("creating block %i: ", block_no);
         printf("%s\n", line_buffer);
         uint64_t size = strnlen(line_buffer, LINE_MAX) + 1;
         block_header_t header = build_block(&previous, line_buffer, size);

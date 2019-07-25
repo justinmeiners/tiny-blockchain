@@ -10,7 +10,7 @@
 
 #include "sha-256.h"
 
-#define LINE_MAX 2048
+#define LINE_MAX 4096
 
 /* print hashes */
 void fprint_hash(FILE* f, uint8_t* hash)
@@ -21,7 +21,6 @@ void fprint_hash(FILE* f, uint8_t* hash)
 }
 
 /* block header */
-// https://bitcoin.org/en/developer-reference#block-headers
 typedef struct
 {
     // Length of the data in the block
@@ -33,7 +32,6 @@ typedef struct
     // prevents previous data from changing
     uint8_t previous_hash[32];
 
-    // pow for later
     /* proof-of-work entries */
     // when this block started being mined
     uint32_t timestamp; 
@@ -55,9 +53,9 @@ void mine_block(block_header_t* header)
     // feel free to try out others.
     uint8_t target[32];
     memset(target, 0, sizeof(target));
-    target[0] = 0;
-    target[1] = 0;
     target[2] = 0x0F;
+    /* too hard?: try target[2] = 0xFF
+       too easy?: try target[2] = 0x01 */
 
 
     while (1)
@@ -67,8 +65,7 @@ void mine_block(block_header_t* header)
         header->timestamp = (uint64_t)time(NULL); 
 
         /* nonce search */
-        // adjust the nonce
-        // until the block header is < the target hash
+        /* adjust the nonce until the block header is < the target hash */
         uint8_t block_hash[32];
         
         for (uint32_t i = 0; i < UINT32_MAX; ++i)
@@ -77,7 +74,7 @@ void mine_block(block_header_t* header)
             calc_sha_256(block_hash, header, sizeof(block_header_t));
         
             if (memcmp(block_hash, target, sizeof(block_hash)) < 0)
-                // we found a good hash!
+                /* we found a good hash */
                 return;
         }
 
@@ -132,19 +129,17 @@ int main(int argc, const char* argv[])
     block_header_t previous = genesis;
     while (!feof(stdin))
     {
-        // hash the resulting
-        // header, for display purposes
+        /* hash the solved header. (only for display purposes) */
         uint8_t test_hash[32];
         calc_sha_256(test_hash, &previous, sizeof(block_header_t));
         printf("done. nonce: %i hash: ", previous.nonce);
         fprint_hash(stdout, test_hash);
         printf("\n");
     
-        // dump to a file
+        /* dump header to a file */
         fwrite(&previous, sizeof(block_header_t), 1, output_file);
      
-        // ask for more data to put
-        // in the next block
+        /* read data to put in the block */
         char line_buffer[LINE_MAX];
         fgets(line_buffer, LINE_MAX, stdin);  
     

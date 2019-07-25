@@ -54,12 +54,10 @@ void mine_block(block_header_t* header)
     // I arbitrarily chose this target
     // feel free to try out others.
     uint8_t target[32];
-    memset(target, 0xFF, sizeof(target));
+    memset(target, 0, sizeof(target));
     target[0] = 0;
-    
-    fprint_hash(stdout, target);
-    printf("\n");
-    
+    target[1] = 0;
+    target[2] = 0x0F;
 
 
     while (1)
@@ -78,7 +76,7 @@ void mine_block(block_header_t* header)
             header->nonce = i;
             calc_sha_256(block_hash, header, sizeof(block_header_t));
         
-            if (memcmp(block_hash, target, sizeof(block_hash)) == -1)
+            if (memcmp(block_hash, target, sizeof(block_hash)) < 0)
                 // we found a good hash!
                 return;
         }

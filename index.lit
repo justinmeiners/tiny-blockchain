@@ -407,6 +407,8 @@ line by line from stdin and put each line in a block.
 The block headers will be written into a file as they are mined.
 
 --- input loop
+@{genesis block}
+
 int block_no = 0;
 block_header_t previous = genesis;
 while (!feof(stdin))
@@ -451,7 +453,6 @@ void fprint_hash(FILE* f, uint8_t* hash)
 ---
 
 ---blockchain.c
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -473,9 +474,9 @@ int main(int argc, const char* argv[])
 {
     FILE* output_file = fopen("chain.bin", "wb");
 
-    @{genesis block}
-
     @{input loop}
+
+    fclose(output_file);
     return 1;
 }
 
@@ -485,7 +486,7 @@ At this point, you should have all the code to compile the project.
 If you are not sure where something belongs, follow the references
 or refer to the [final code](src/blockchain.c)
 
-@s Running
+@s Running the Program
 
 I have provided [Plato's Gorgias](docs/data/gorgias.txt) as a sample text
 to store in our Blockchain. Go ahead and download it.

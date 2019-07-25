@@ -97,7 +97,7 @@ I hope to bring a valuable perspective by focusing on the essentials.
 </p>
 <p>This project will be written in C, although it is easy to translate to other languages.
 To start, create a new <code>.c</code> file for the code in the article.
-You will also need to include <a href="src/sha-256.h">sha-256.h</a> and <a href="src/sha-256.c">sha-256.c</a>(1) for
+You will also need to include <a href="src/sha-256.h">sha-256.h</a> and <a href="src/sha-256.c">sha-256.c</a> for
 hashes (or use your language's library).
 </p>
 <blockquote><p> <strong>Note:</strong> This is a <a href="https://en.wikipedia.org/wiki/Literate_programming">literate program</a>.
@@ -531,7 +531,7 @@ block_header_t genesis = build_block(NULL, genesis_data, sizeof(genesis_data));
 </pre>
 
 
-<p class="seealso">Used in section <a href="index.html#1:9">9</a></p>
+
 </div>
 <p>To keep our program simple, we can simply read text 
 line by line from stdin and put each line in a block.
@@ -541,6 +541,8 @@ The block headers will be written into a file as they are mined.
 <div class="codeblock">
 <span class="codeblock_name">{input loop <a href="index.html#1:8">8</a>}</span>
 <pre class="prettyprint lang-c">
+<span class="nocode pln">{genesis block, <a href="index.html#1:8">8</a>}</span>
+
 int block_no = 0;
 block_header_t previous = genesis;
 while (!feof(stdin))
@@ -597,7 +599,6 @@ void fprint_hash(FILE* f, uint8_t* hash)
 <div class="codeblock">
 <span class="codeblock_name">{<strong>blockchain.c</strong> <a href="index.html#1:9">9</a>}</span>
 <pre class="prettyprint lang-c">
-
 #include &lt;stdio.h&gt;
 #include &lt;stdlib.h&gt;
 #include &lt;stdint.h&gt;
@@ -619,9 +620,9 @@ int main(int argc, const char* argv[])
 {
     FILE* output_file = fopen("chain.bin", "wb");
 
-<span class="nocode pln">    {genesis block, <a href="index.html#1:8">8</a>}</span>
-
 <span class="nocode pln">    {input loop, <a href="index.html#1:8">8</a>}</span>
+
+    fclose(output_file);
     return 1;
 }
 
@@ -636,7 +637,7 @@ or refer to the <a href="src/blockchain.c">final code</a>
 </p>
 
 </div>
-<a name="1:10"><div class="section"><h4>10. Running</h4></a>
+<a name="1:10"><div class="section"><h4>10. Running the Program</h4></a>
 <p>I have provided <a href="docs/data/gorgias.txt">Plato's Gorgias</a> as a sample text
 to store in our Blockchain. Go ahead and download it.
 Run the program by inputting the file to <code>stdin</code>.

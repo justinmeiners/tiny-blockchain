@@ -1,5 +1,4 @@
 /* blockchain.c */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -118,13 +117,13 @@ int main(int argc, const char* argv[])
 {
     FILE* output_file = fopen("chain.bin", "wb");
 
+    /* input loop */
     /* genesis block */
     printf("creating genesis block...\n");
     char genesis_data[] = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
     block_header_t genesis = build_block(NULL, genesis_data, sizeof(genesis_data));
 
-
-    /* input loop */
+    
     int block_no = 0;
     block_header_t previous = genesis;
     while (!feof(stdin))
@@ -152,6 +151,8 @@ int main(int argc, const char* argv[])
         ++block_no;
     }
 
+
+    fclose(output_file);
     return 1;
 }
 

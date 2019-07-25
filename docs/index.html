@@ -368,8 +368,12 @@ to improving CPUs.
 // I arbitrarily chose this target
 // feel free to try out others.
 uint8_t target[32];
-memset(target, 0, sizeof(target));
-target[4] = 0x8F;
+memset(target, 0xFF, sizeof(target));
+target[0] = 0;
+
+fprint_hash(stdout, target);
+printf("\n");
+
 </pre>
 
 
@@ -542,6 +546,7 @@ while (!feof(stdin))
     fgets(line_buffer, LINE_MAX, stdin);  
 
     printf("creating block %i...\n", block_no);
+    printf("%s\n", line_buffer);
     uint64_t size = strnlen(line_buffer, LINE_MAX) + 1;
     block_header_t header = build_block(&amp;previous, line_buffer, size);
   

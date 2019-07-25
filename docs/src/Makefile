@@ -1,4 +1,4 @@
 SOURCES=*.c
 
 blockchain: ${SOURCES}
-	gcc $^ -o $@
+	gcc -O3 $^ -o $@

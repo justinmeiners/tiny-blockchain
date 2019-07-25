@@ -107,7 +107,56 @@ hashes (or use your language's library).
 </blockquote>
 
 </div>
-<a name="1:3"><div class="section"><h4>3. What is a Blockchain?</h4></a>
+<a name="1:3"><div class="section"><h4>3. Hash Review</h4></a>
+<p>You are probably familiar with <a href="https://en.wikipedia.org/wiki/Cryptographic_hash_function">hashes</a>, but just to review
+a hash is a function which maps large pieces of data to short checksums.
+The essential property of a hash is that it's <em>one way</em>.
+It's <em>easy</em> to calculate output for an input, <em>impossible</em> to know
+what input produced a given output, and
+<em>very difficult</em> to find an alternative piece of data
+that produces the same output.
+</p>
+<p><img src="img/hash.png" alt="hash function">
+</p>
+<p>To verify a piece of data, hash it and compare it with a trusted hash.
+Since it's extremely unlikely that different data hashes the same,
+if they match, we have good reason to believe that the data is valid.
+</p>
+<p>For example, a newspaper could publish the hash of each paper it publishes,
+so that anyone could verify whether a given paper was valid.
+Ubuntu publishes the hash of each release, so you know you downloaded the real thing, and 
+not a virus.
+(Of course, you still have to trust that the hash you got is the right one.)
+</p>
+
+</div>
+<a name="1:4"><div class="section"><h4>4. What is a blockchain?</h4></a>
+<p>Hash checksums are helpful for verifying the <em>state</em> of data,
+at a fixed snapshot in time.
+But, sometimes we want to ensure the <em>history</em> of some data over time.
+Two pieces of data which are the same now, may not be equivalent if
+they took different paths to get there.
+</p>
+<p>A bank account is one such example.
+We not only care about the final balance, but the full history of each individual
+deposit and withdrawel.
+Did our bills get paid?
+Has someone been withdrawing money from our account?
+Historical integrity here is essential!
+Note that a hash of a bank statement is worthless,
+even if it includes the full record of transactions.
+As soon as a new transaction comes in, the hash
+must completely change.
+Someone could just as easily tamper with past transactions,
+and the hash couldn't tell you.
+</p>
+<p>A blockchain allows us to verify these kinds of histories.
+In physics and math this property is called <a href="https://en.wikipedia.org/wiki/Nonholonomic_system">path dependence</a>
+which leads us to a very philosphical definition:
+a blockchain is a tool for verifying the integrity of path dependent systems.
+Just kidding! 
+That's not very helpful. How about this:
+</p>
 <p>A blockchain is a data structure for storing an ordered sequence of records (<strong>blocks</strong>) in a tamper-resistant way.
 Given some small header information one can verify whether a given record:
 </p>
@@ -119,38 +168,6 @@ Given some small header information one can verify whether a given record:
 <li>is in the correct order, relative to the other records
 </li>
 </ol>
-<p>Suppose a news outlet wanted the public to be able to verify the history of papers
-they had published, so that anyone could check whether a given paper was fake.
-They could publish each paper on their website, but this is a lot of data
-to upload and download for simple verification.
-Better yet they could publish the <strong>hash</strong> of each paper which is just
-a few bytes.
-</p>
-<p>You are probably familiar with <a href="https://en.wikipedia.org/wiki/Cryptographic_hash_function">hashes</a>, but just to review
-a hash is a function which maps large pieces of data to short checksums.
-The essential property of a hash is that it's <em>one way</em>.
-It's <em>easy</em> to calculate output for an input, <em>impossible</em> to know
-what input produced a given output, and
-<em>very difficult</em> to find an alternative piece of data
-that produces the same output.
-</p>
-<p><img src="img/hash.png" alt="hash function">
-</p>
-<p>To verify a piece of data, it can be hashed, and compared against a trusted hash.
-Since its extremely unlikely that different data hashes the same,
-if they match, we have good reason to believe that the data is valid.
-</p>
-<p>So if we had a hash of a newspaper, from a source we trusted, we could check property #1,
-that it had not been modified.
-But, this doesn't tell us about the relationship of that individual paper to the whole.
-</p>
-<p>Publishing a list of newspaper hashes is a good start, but on its own it only guarentees property #1, 
-It tells us nothing about how the papers relate to each other.
-Are they out of order? Has an extra one been inserted?
-Knowledge of the full hash list could tell us some of this information,
-but blockchains take things a step further by cryptographically ensuring
-that these constraints hold.
-</p>
 <p>Each block is made up of a <strong>header</strong> and <strong>contents</strong>.
 The <strong>contents</strong> are just arbitrary data to be stored in the chain.
 The <strong>header</strong> contains some info about the block and two hashes:
@@ -167,7 +184,7 @@ The <strong>header</strong> contains some info about the block and two hashes:
 </ol>
 
 <div class="codeblock">
-<span class="codeblock_name">{block header <a href="index.html#1:3">3</a>}</span>
+<span class="codeblock_name">{block header <a href="index.html#1:4">4</a>}</span>
 <pre class="prettyprint lang-c">
 // https://bitcoin.org/en/developer-reference#block-headers
 typedef struct
@@ -182,44 +199,54 @@ typedef struct
     uint8_t previous_hash[32];
 
     // pow for later
-<span class="nocode pln">    {proof-of-work entries, <a href="index.html#1:6">6</a>}</span>
+<span class="nocode pln">    {proof-of-work entries, <a href="index.html#1:7">7</a>}</span>
 } block_header_t;
 
 </pre>
 
 
-<p class="seealso">Used in section <a href="index.html#1:9">9</a></p>
+<p class="seealso">Used in section <a href="index.html#1:10">10</a></p>
 </div>
 <p>(<code>32</code> is then number of bytes in a <code>sha256</code> hash.)
 </p>
-<p>You may wonder how the hash of the previous block
-can protect against changes much earlier in the chain.
-Remember that the previous block also has the hash of the header
-<em>before it</em>, so any changes would changes to its header would affect
-it, and so on in a domino effect.
-</p>
 <p><img src="img/blockchain.gif" alt="blockchain">
 </p>
-<p>If you use Git version control, you already familiar with this idea.
+<p><code>h(h(h(... ++ C_n-2) ++ C_n-1) ++ C_n)</code>
+</p>
+<p>Applying this to the bank account example, each day's transactions
+could be stored in a block.
+Given the hash of the last header in the chain, (such as a bank statement)
+new transactions could be added in new blocks,
+but no changes could be made to any previous block
+, without disrupting the hash.
+Because each header reference the previous block,
+and that one references the one <em>before it</em>,
+changes propogate like dominos knocking each other over.
+</p>
+<p>If you use Git version control, you are already familiar with this!
 Each commit is a hash of the state of the code, and also the hash
-of the previous commit. This ensures that differing
-histories result in different commit hashes, even when the code is the same.
+of the previous commit.
+If you change an old commit, all future commits change.
+Just like the bank account example,
+the history of the code matters just as much as the state.
+so that differing histories result in different commit hashes.
 </p>
 
 </div>
-<a name="1:4"><div class="section"><h4>4. Creating Blocks</h4></a>
-<p>Creating a block and adding it to the chain is very straightfoward.
-We need some data for contents.
-In this project we will be storing blobs of text,
-although you could easily store other binary data.
+<a name="1:5"><div class="section"><h4>5. Creating Blocks</h4></a>
+<p>The Bitcoin blockchain works just like a bank account.
+It stores a ledger of <a href="https://en.bitcoin.it/wiki/Transaction">financial transactions</a>.
+But, blockchains can store any kind of data.
+In this project we will be storing blobs of text.
 </p>
-<p>The block also needs a reference to a previous block header (or <code>NULL</code> for the "genesis" block.)
+<p>Creating a block and adding it to the chain is very straightfoward.
+The block also needs a reference to a previous block header (or <code>NULL</code> for the "genesis" block.)
 We simply hash the contents and the previous block header and 
 assign it to the new header.
 </p>
 
 <div class="codeblock">
-<span class="codeblock_name">{build block <a href="index.html#1:4">4</a>}</span>
+<span class="codeblock_name">{build block <a href="index.html#1:5">5</a>}</span>
 <pre class="prettyprint lang-c">
 block_header_t build_block(const block_header_t* previous, const char* contents, uint64_t length)
 {
@@ -234,7 +261,7 @@ block_header_t build_block(const block_header_t* previous, const char* contents,
     else
     {
         // genesis has no previous. just use zeroed hash
-        memset(header.previous_hash, 0, sizeof(header.previous_hash))
+        memset(header.previous_hash, 0, sizeof(header.previous_hash));
     }
     
     // add data hash
@@ -247,39 +274,37 @@ block_header_t build_block(const block_header_t* previous, const char* contents,
 </pre>
 
 
-<p class="seealso">Used in section <a href="index.html#1:9">9</a></p>
+<p class="seealso">Used in section <a href="index.html#1:10">10</a></p>
 </div>
-<p>So far we have followed Bitcoin closely. But
-just so you know there are a few differences.
-Bitcoin of course stores financial transactions as
-<a href="https://en.bitcoin.it/wiki/Transaction">UTXOs</a>.
-The contents of the block are a bunch of these transactions.
-Also, instead of a hash of the whole contents, the <a href="https://bitcoin.org/en/developer-reference#block-headers">headers</a>
-contain a <a href="https://en.bitcoinwiki.org/wiki/Merkle_tree">Merkle Root hash</a>,
-which makes it easy to verify transactions are included in a block.
+<p>It's worth pointing out one other 
+Bitcoin difference.
+In place of a contents hash
+Bitcoin headers store a <a href="https://en.bitcoinwiki.org/wiki/Merkle_tree">Merkle Root hash</a>,
+which fullfils the same role, but makes it easy to verify transactions are included in a block.
 But, this is outside the scope of this project.
 </p>
 
 </div>
-<a name="1:5"><div class="section"><h4>5. What is proof-of-work?</h4></a>
-<p>If you have been paying attention you may be skeptical about how
-useful blockchains are on their own.
-Is this really much better than a list of hashes?
-To verify a block, you need to have headers, which you must have received from an authority you trust.
-A malicious person could give you false headers
-you would have no way to tell it wasn't the <em>real thing</em>.
+<a name="1:6"><div class="section"><h4>6. What is proof-of-work?</h4></a>
+<p>Blockchains can effectively store
+records over time, but the headers must always
+be obtained by a trusted party, whether 
+it's yourself or your bank.
+To verify a block, you need the headers.
+If you don't already have them, a malicious person could give you fake headers,
+and you would have no way to tell they weren't <em>real</em>.
 They could also take a blockchain you trust, add new headers
-to it, and the new ones would look just as valid as old one!
+to it, and the new ones would look just as valid as the old one!
 </p>
-<p>So, blockchains can be useful record keeping devices among trusted groups, but its not clear
-at this point how they can keep any kind of contested record, especially a record that stores money.
+<p>So, blockchains can be useful record keeping tools among trusted groups, but its not clear
+at this point how they can keep any kind of contested record, especially a record that stores internet money.
 This is the problem solved by <strong>proof-of-work</strong>. 
-It provides a simple rule that <em>anyone</em> can use to objectively (2) determine
-whether a given blockchain is the one that is the right one. (3)
+It provides a simple rule that <em>anyone</em> can use to "objectively" determine
+whether a given blockchain is the one that is the "right" one.
 </p>
 <p>Instead of allowing blocks to be created freely,
-proof-of-work requires that CPU resources be spent,
-by solving a problem, in order to create a block.
+proof-of-work requires that CPU resources be spent on a problem,
+in order to create a block.
 This process is called <strong>mining</strong>.
 Proof that the CPU resources were spent 
 is included in the block itself, so that
@@ -287,26 +312,40 @@ anyone can verify that the work was actually done.
 Hence the term "proof-of-work".
 </p>
 <p>In the Bitcoin network, computers across the world
-are constantly trying to produce blocks, but they are
-limit by how fast their CPUs are. Once they have spent
-the required CPU time, they can produce a block.
+are constantly racing to be the first to solve a problem
+so they can produce a block.
+But they are limited by their CPU speed.
+The difficulty of the problem ensures that it will 
+take a certain amount of time, before anyone can produce a block,
+and so adds an additional property:
+<em>longer chains have had more CPU resources spent making them.</em>
 </p>
-<p>This makes the chain verifiable. The valid Bitcoin chain
-is always <em>the longest chain.</em>
-To add a new block, one has to spend CPU resources for just that block.
-To add two blocks, twice the amount of work must be done, and 
-so on. 
+<p>This is what makes the chain verifiable.
+The valid Bitcoin chain is always <em>the one that is the longest</em>
+because it is the one that has had the most mining effort
+spent on it.
 </p>
-<p>So making a false chain requires spending as much CPU time
-as all the computers in the world have 
+<p>This makes it very difficult to tamper with old records or make a fake chain.
+In order to rewrite a chain, you have to spend the CPU resources
+to do so.
+To go back two blocks, twice the amount of work must be done, and 
+so on.
+Meanwhile, the original chain is constantly being extended by CPUs across the globe.
+</p>
+<p>I put the words "objectively" and "right" in quotes because you now 
+know those claims are a bit dubious.
+The "right" chain is defined by a consensues of CPU power.
+The right one is the one that the most mining power has been put into.
+The only objective thing we know is which chain has had the most CPU
+resources spent on it.
 </p>
 <blockquote><p> "Bitcoin can thus be understood as a technology that converts electricity to truthful records through the expenditure of processing power." - Safedean Ammous.
 </p>
 </blockquote>
 
 </div>
-<a name="1:6"><div class="section"><h4>6. Mining</h4></a>
-<p>We add an additional requirement to the chain,
+<a name="1:7"><div class="section"><h4>7. Mining</h4></a>
+<p>To add proof-of-work, we add an additional requirement to the chain,
 which is that the hash of any block header must be less than
 some <strong>target</strong> hash.
 In other words <code>sha256(header) &lt; T</code>.
@@ -314,20 +353,41 @@ By "less than" we mean the usual byte by byte lexographic
 comparsion, like alphabetical order.
 (For example <code>0000 0001</code> is less than <code>0000 0010</code>)
 </p>
-<h3> Nonce</h3>
-<p>Right now the header is fixed, it contains only two immutable fields,
-the contents hash, and the previous block hash.
-So how can we get a hash below the target?
-We add a few additional fields to the header that can be freely modified
-called the <strong>nonce</strong> and <strong>timestamp</strong>.
-</p>
-<p>Add the following to the <code>block_header_t</code> structure from before.
+<h3> Target</h3>
+<p>The target <code>T</code> can be any hash. However, the smaller (in ordering) it is
+, the more difficult it is to find a valid hash, because there
+are a fewer hashes within the valid range.
+This allows Bitcoin to adjust mining difficulty to adapt
+to improving CPUs.
 </p>
 
 <div class="codeblock">
-<span class="codeblock_name">{proof-of-work entries <a href="index.html#1:6">6</a>}</span>
+<span class="codeblock_name">{target <a href="index.html#1:7">7</a>}</span>
 <pre class="prettyprint lang-c">
+// this controls the difficulty.
+// I arbitrarily chose this target
+// feel free to try out others.
+uint8_t target[32];
+memset(target, 0, sizeof(target));
+target[4] = 0x8F;
+</pre>
 
+
+
+</div>
+<h3> Nonce</h3>
+<p>Right now the header is fixed, it contains only two immutable fields,
+the contents hash, and the previous block hash.
+So how can we get a hash below the target? 
+We need to add a few additional fields to the headers.
+These are called the <strong>nonce</strong> and <strong>timestamp</strong>.
+</p>
+<p>Add the following to the <code>block_header_t</code> struct from before.
+</p>
+
+<div class="codeblock">
+<span class="codeblock_name">{proof-of-work entries <a href="index.html#1:7">7</a>}</span>
+<pre class="prettyprint lang-c">
 // when this block started being mined
 uint32_t timestamp; 
 
@@ -338,11 +398,12 @@ uint32_t nonce;
 </pre>
 
 
-<p class="seealso">Used in section <a href="index.html#1:3">3</a></p>
+<p class="seealso">Used in section <a href="index.html#1:4">4</a></p>
 </div>
 <p>To make a block header valid, the nonce
 is adjusted until the header hashes in the valid range.
-This adjustment process is called mining.
+This adjustment process is the difficult problem referred to earlier.
+It's really hard to find a valid hash.
 There is no rhyme or reason to guessing the nonce.
 The miner just tries as many as it can!
 </p>
@@ -351,13 +412,13 @@ The miner just tries as many as it can!
 </p>
 
 <div class="codeblock">
-<span class="codeblock_name">{nonce search <a href="index.html#1:6">6</a>}</span>
+<span class="codeblock_name">{nonce search <a href="index.html#1:7">7</a>}</span>
 <pre class="prettyprint lang-c">
 // adjust the nonce
 // until the block header is &lt; the target hash
 uint8_t block_hash[32];
 
-for (uint32_t i = 0; i &lt; UNIT32_MAX; ++i)
+for (uint32_t i = 0; i &lt; UINT32_MAX; ++i)
 {
     header-&gt;nonce = i;
     calc_sha_256(block_hash, header, sizeof(block_header_t));
@@ -386,11 +447,11 @@ the timestamp is reset and it starts again.
 </p>
 
 <div class="codeblock">
-<span class="codeblock_name">{mining <a href="index.html#1:6">6</a>}</span>
+<span class="codeblock_name">{mining <a href="index.html#1:7">7</a>}</span>
 <pre class="prettyprint lang-c">
 void mine_block(block_header_t* header)
 {
-<span class="nocode pln">    {target, <a href="index.html#1:6">6</a>}</span>
+<span class="nocode pln">    {target, <a href="index.html#1:7">7</a>}</span>
 
     while (1)
     {
@@ -398,7 +459,7 @@ void mine_block(block_header_t* header)
         // start of this mining round
         header-&gt;timestamp = (uint64_t)time(NULL); 
 
-<span class="nocode pln">        {nonce search, <a href="index.html#1:6">6</a>}</span>
+<span class="nocode pln">        {nonce search, <a href="index.html#1:7">7</a>}</span>
 
         // we expired the uint32 without finding a valid hash
         // restart the time, and hope that this time + nonce
@@ -411,83 +472,7 @@ void mine_block(block_header_t* header)
 </pre>
 
 
-<p class="seealso">Used in section <a href="index.html#1:9">9</a></p>
-</div>
-<h3> Target</h3>
-<p>The target <code>T</code> can be any hash. However, the smaller (in ordering) it is
-, the more difficult it is to find a valid hash, because there
-are a fewer hashes within the valid range.
-This allows Bitcoin to adjust mining difficulty.
-</p>
-
-<div class="codeblock">
-<span class="codeblock_name">{target <a href="index.html#1:6">6</a>}</span>
-<pre class="prettyprint lang-c">
-// this controls the difficulty.
-// I arbitrarily chose this target
-// feel free to try out others.
-uint8_t target[32];
-memset(target, 0, sizeof(target));
-target[2] = 0x1F;
-</pre>
-
-
-
-</div>
-</div>
-<a name="1:7"><div class="section"><h4>7. Production Loop</h4></a>
-<p>In the real Bitcoin network, miners
-are connected together in a peer-to-peer network.
-They receive transactions from other client to include in blocks, and
-compete with each other to produce blocks.
-</p>
-<p>Our tiny blockchain, we won't have any network or peers,
-and will just run on our computer.
-However we still want to get a real proof-of-work effect
-so that the longer you run your computer
-the more secure the chain becomes!
-</p>
-<p>We will do this by accepting text input from stdin, and encoding
-each line in a block.
-The longer you run your computer, the more secure the chain becomes!
-</p>
-
-<div class="codeblock">
-<span class="codeblock_name">{input loop <a href="index.html#1:7">7</a>}</span>
-<pre class="prettyprint lang-c">
-int block_no = 0;
-block_header_t previous = genesis;
-while (!feof(stdin))
-{
-    // ask for more data to put
-    // in the next block
-    char line_buffer[LINE_MAX];
-    fgets(line_buffer, LINE_MAX, stdin);  
-
-    printf("creating block %i...\n", block_no);
-    uint64_t size = strnlen(line_buffer, LINE_MAX) + 1;
-    block_header_t header = build_block(&amp;previous, line_buffer, size);
-
-    // hash the resulting
-    // header, for display purposes
-    uint8_t test_hash[32];
-    calc_sha_256(test_hash, &amp;header, sizeof(block_header_t));
-
-    printf("done. nonce: %i hash: ", header.nonce);
-    fprint_hash(stdout, test_hash);
-    printf("\n");
-    
-    previous = header;
-    ++block_no;
-}
-
-// blocks aren't actually stored
-// anywhere. We just keep on building the chain
-// from the previous header.
-</pre>
-
-
-<p class="seealso">Used in section <a href="index.html#1:9">9</a></p>
+<p class="seealso">Used in section <a href="index.html#1:10">10</a></p>
 </div>
 </div>
 <a name="1:8"><div class="section"><h4>8. Genesis Block</h4></a>
@@ -511,16 +496,71 @@ block_header_t genesis = build_block(NULL, genesis_data, sizeof(genesis_data));
 </pre>
 
 
-<p class="seealso">Used in section <a href="index.html#1:9">9</a></p>
+<p class="seealso">Used in section <a href="index.html#1:10">10</a></p>
 </div>
 </div>
-<a name="1:9"><div class="section"><h4>9. Utilties</h4></a>
+<a name="1:9"><div class="section"><h4>9. Production Loop</h4></a>
+<p>In the real Bitcoin network, miners
+are connected together in a peer-to-peer network.
+They receive transactions from other client to include in blocks, and
+compete with each other to produce blocks.
+</p>
+<p>Our tiny blockchain, we won't have any network or peers,
+and will just run on our computer.
+However we still want to get a real proof-of-work effect,
+that longer chains have more CPU power spet on them.
+So the longer you run your computer
+the more secure the chain becomes!
+</p>
+<p>We will do this by accepting text input from stdin, and encoding
+each line in a block.
+I have provided <a href="docs/gorgias.txt">Plato's Gorgias</a>
+to be archived into your blockchain line by line.
+</p>
+
+<div class="codeblock">
+<span class="codeblock_name">{input loop <a href="index.html#1:9">9</a>}</span>
+<pre class="prettyprint lang-c">
+int block_no = 0;
+block_header_t previous = genesis;
+while (!feof(stdin))
+{
+    // hash the resulting
+    // header, for display purposes
+    uint8_t test_hash[32];
+    calc_sha_256(test_hash, &amp;previous, sizeof(block_header_t));
+    printf("done. nonce: %i hash: ", previous.nonce);
+    fprint_hash(stdout, test_hash);
+    printf("\n");
+
+    // dump to a file
+    fwrite(&amp;previous, sizeof(block_header_t), 1, output_file);
+ 
+    // ask for more data to put
+    // in the next block
+    char line_buffer[LINE_MAX];
+    fgets(line_buffer, LINE_MAX, stdin);  
+
+    printf("creating block %i...\n", block_no);
+    uint64_t size = strnlen(line_buffer, LINE_MAX) + 1;
+    block_header_t header = build_block(&amp;previous, line_buffer, size);
+  
+    previous = header;
+    ++block_no;
+}
+</pre>
+
+
+<p class="seealso">Used in section <a href="index.html#1:10">10</a></p>
+</div>
+</div>
+<a name="1:10"><div class="section"><h4>10. Utilties</h4></a>
 <p>This section contains boring bits of code
 not relevant to understanding the actual blockchain.
 </p>
 
 <div class="codeblock">
-<span class="codeblock_name">{print hashes <a href="index.html#1:9">9</a>}</span>
+<span class="codeblock_name">{print hashes <a href="index.html#1:10">10</a>}</span>
 <pre class="prettyprint lang-c">
 void fprint_hash(FILE* f, uint8_t* hash)
 {
@@ -535,7 +575,7 @@ void fprint_hash(FILE* f, uint8_t* hash)
 </div>
 
 <div class="codeblock">
-<span class="codeblock_name">{<strong>blockchain.c</strong> <a href="index.html#1:9">9</a>}</span>
+<span class="codeblock_name">{<strong>blockchain.c</strong> <a href="index.html#1:10">10</a>}</span>
 <pre class="prettyprint lang-c">
 
 #include &lt;stdio.h&gt;
@@ -550,16 +590,18 @@ void fprint_hash(FILE* f, uint8_t* hash)
 
 #define LINE_MAX 2048
 
-<span class="nocode pln">{print hashes, <a href="index.html#1:9">9</a>}</span>
-<span class="nocode pln">{block header, <a href="index.html#1:3">3</a>}</span>
-<span class="nocode pln">{build block, <a href="index.html#1:4">4</a>}</span>
-<span class="nocode pln">{mining, <a href="index.html#1:6">6</a>}</span>
+<span class="nocode pln">{print hashes, <a href="index.html#1:10">10</a>}</span>
+<span class="nocode pln">{block header, <a href="index.html#1:4">4</a>}</span>
+<span class="nocode pln">{mining, <a href="index.html#1:7">7</a>}</span>
+<span class="nocode pln">{build block, <a href="index.html#1:5">5</a>}</span>
 
 int main(int argc, const char* argv[])
 {
+    FILE* output_file = fopen("chain.bin", "wb");
+
 <span class="nocode pln">    {genesis block, <a href="index.html#1:8">8</a>}</span>
 
-<span class="nocode pln">    {input loop, <a href="index.html#1:7">7</a>}</span>
+<span class="nocode pln">    {input loop, <a href="index.html#1:9">9</a>}</span>
     return 1;
 }
 
@@ -574,17 +616,17 @@ or refer to the <a href="src/blockchain.c">final code</a>
 </p>
 
 </div>
-<a name="1:10"><div class="section"><h4>10. Running</h4></a>
-<p>Run the program by inputting a file to <code>stdin</code>.
+<a name="1:11"><div class="section"><h4>11. Running</h4></a>
+<p>Download <a href="docs/gorgias.txt">Plato's Gorgias</a>.
+Run the program by inputting a file to <code>stdin</code>.
 </p>
-<pre><code>./cat headlines.txt | blockchain 
-
+<pre><code>./cat gorgias.txt | blockchain 
 </code></pre><p>If the program produces blocks too slowly, or quickly, adjust the 
 <strong>target</strong> variable.
 </p>
 
 </div>
-<a name="1:11"><div class="section"><h4>11. Notes</h4></a>
+<a name="1:12"><div class="section"><h4>12. Notes</h4></a>
 <p>https://blog.sia.tech/the-state-of-cryptocurrency-mining-538004a37f9b
 </p>
 <p>(1) - Thanks to <a href="https://github.com/amosnier/sha-2">Alain Mosnier</a>

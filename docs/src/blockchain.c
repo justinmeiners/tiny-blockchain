@@ -35,7 +35,6 @@ typedef struct
 
     // pow for later
     /* proof-of-work entries */
-    
     // when this block started being mined
     uint32_t timestamp; 
     
@@ -47,31 +46,6 @@ typedef struct
 } block_header_t;
 
 
-/* build block */
-block_header_t build_block(const block_header_t* previous, const char* contents, uint64_t length)
-{
-    block_header_t header;
-    header.contents_length = length;
-
-    if (previous)
-    {
-        // calculate previous block header hash
-        calc_sha_256(header.previous_hash, previous, sizeof(block_header_t));
-    }
-    else
-    {
-        // genesis has no previous. just use zeroed hash
-        memset(header.previous_hash, 0, sizeof(header.previous_hash))
-    }
-    
-    // add data hash
-    calc_sha_256(header.contents_hash, contents, length);
-
-    // mining. disucssed later
-    mine_block(&header);
-    return header;
-}
-
 /* mining */
 void mine_block(block_header_t* header)
 {
@@ -81,7 +55,7 @@ void mine_block(block_header_t* header)
     // feel free to try out others.
     uint8_t target[32];
     memset(target, 0, sizeof(target));
-    target[2] = 0x1F;
+    target[4] = 0x8F;
 
 
     while (1)
@@ -95,7 +69,7 @@ void mine_block(block_header_t* header)
         // until the block header is < the target hash
         uint8_t block_hash[32];
         
-        for (uint32_t i = 0; i < UNIT32_MAX; ++i)
+        for (uint32_t i = 0; i < UINT32_MAX; ++i)
         {
             header->nonce = i;
             calc_sha_256(block_hash, header, sizeof(block_header_t));
@@ -115,9 +89,36 @@ void mine_block(block_header_t* header)
     assert(0);
 }
 
+/* build block */
+block_header_t build_block(const block_header_t* previous, const char* contents, uint64_t length)
+{
+    block_header_t header;
+    header.contents_length = length;
+
+    if (previous)
+    {
+        // calculate previous block header hash
+        calc_sha_256(header.previous_hash, previous, sizeof(block_header_t));
+    }
+    else
+    {
+        // genesis has no previous. just use zeroed hash
+        memset(header.previous_hash, 0, sizeof(header.previous_hash));
+    }
+    
+    // add data hash
+    calc_sha_256(header.contents_hash, contents, length);
+
+    // mining. disucssed later
+    mine_block(&header);
+    return header;
+}
+
 
 int main(int argc, const char* argv[])
 {
+    FILE* output_file = fopen("chain.bin", "wb");
+
     /* genesis block */
     printf("creating genesis block...\n");
     char genesis_data[] = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
@@ -129,6 +130,17 @@ int main(int argc, const char* argv[])
     block_header_t previous = genesis;
     while (!feof(stdin))
     {
+        // hash the resulting
+        // header, for display purposes
+        uint8_t test_hash[32];
+        calc_sha_256(test_hash, &previous, sizeof(block_header_t));
+        printf("done. nonce: %i hash: ", previous.nonce);
+        fprint_hash(stdout, test_hash);
+        printf("\n");
+    
+        // dump to a file
+        fwrite(&previous, sizeof(block_header_t), 1, output_file);
+     
         // ask for more data to put
         // in the next block
         char line_buffer[LINE_MAX];
@@ -137,23 +149,10 @@ int main(int argc, const char* argv[])
         printf("creating block %i...\n", block_no);
         uint64_t size = strnlen(line_buffer, LINE_MAX) + 1;
         block_header_t header = build_block(&previous, line_buffer, size);
-    
-        // hash the resulting
-        // header, for display purposes
-        uint8_t test_hash[32];
-        calc_sha_256(test_hash, &header, sizeof(block_header_t));
-    
-        printf("done. nonce: %i hash: ", header.nonce);
-        fprint_hash(stdout, test_hash);
-        printf("\n");
-        
+      
         previous = header;
         ++block_no;
     }
-    
-    // blocks aren't actually stored
-    // anywhere. We just keep on building the chain
-    // from the previous header.
 
     return 1;
 }

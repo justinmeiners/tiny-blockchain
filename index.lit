@@ -24,8 +24,8 @@ If you are already an enthusist you probably have seen similar articles.
 I hope to bring a valuable perspective by focusing on the essentials.
 
 This project will be written in C, although it is easy to translate to other languages.
-To start, create a new `.c` file for the code in the article.
-You will also need to include [sha-256.h](src/sha-256.h) and [sha-256.c](src/sha-256.c) for
+To start, create a new `.c` file to place code in.
+You will also need to include [sha-256.h](src/sha-256.h) and [sha-256.c](src/sha-256.c)(1) for
 hashes (or use your language's library).
 
 > **Note:** This is a [literate program](https://en.wikipedia.org/wiki/Literate_programming).
@@ -49,8 +49,8 @@ Since it's extremely unlikely that different data hashes the same,
 if they match, we have good reason to believe that the data is valid.
 
 For example, a newspaper could publish the hash of each paper it publishes,
-so that anyone could verify whether a given paper was valid.
-Ubuntu publishes the hash of each release, so you know you downloaded the real thing, and 
+so that anyone could verify whether a given paper was genuine.
+Ubuntu Linux publishes the hash of each release, so you know you downloaded the real thing, and 
 not a virus.
 (Of course, you still have to trust that the hash you got is the right one.)
 
@@ -63,26 +63,26 @@ To check your knowledge of hashes, here are some questions to consider:
 
 @s What is a blockchain?
 
-Hash checksums are helpful for verifying the *state* of data,
-at a fixed snapshot in time.
-But, sometimes we want to check the *history* of some data over time.
+Hash checksums are helpful for verifying the *state* of data, at a fixed snapshot in time.
+But, sometimes we want to ensure the *history* of some data over time.
 Two pieces of data which are the same now, may not be equivalent if
 they took different paths to get there.
+
+![path dependence](img/path-dependence.png)
 
 A bank account is one such example.
 We not only care about the final balance, but the full history of each individual
 deposit and withdrawel.
 Did our bills get paid?
 Has someone been withdrawing money from our account?
-Historical integrity here is essential!
+Historical integrity is starting to sound pretty important!
 Note that a hash of a bank statement is worthless,
 even if it includes the full record of transactions.
-As soon as a new transaction comes in, the hash
-must completely change.
+As soon as a new transaction occurs, the state completely changes.
 Someone could just as easily tamper with past transactions,
 and the hash couldn't tell you.
 
-A blockchain allows us to verify these kinds of histories.
+A blockchain allows one to verify these kinds of histories.
 In physics and math this property is called [path dependence](https://en.wikipedia.org/wiki/Nonholonomic_system)
 which leads us to a very philosphical definition:
 a blockchain is a tool for verifying the integrity of path dependent systems.
@@ -125,22 +125,22 @@ typedef struct
 
 (`32` is then number of bytes in a `sha256` hash.)
 
-The headers then form a chain by linking each header to the previous.
+The headers thus form a chain by linking each header to the previous.
 
 ![blockchain](img/blockchain.gif)
 
 Applying this to the bank account example, each day's transactions
 could be stored in a block.
 Given the hash of the last header in the chain, (such as a bank statement)
-new transactions could be added in new blocks,
-but no changes could be made to any previous block
-, without disrupting the hash.
+new transactions could be saftely added in new blocks,
+but any changes to previous blocks would disrupt the hash.
 Because each header reference the previous block,
 and that one references the one *before it*,
 changes propogate like dominos knocking each other over.
 
 The domino effect can also be seen in the expanded equation for the hash of the last block
-where $h$ is a hash function and $C_{i}$ is the contents. See how it includes the contents of each preceding block?
+where $h$ is a hash function and $C_{i}$ is the contents of the $i$th block.
+See how it includes the contents of each preceding block?
 
 $$h(h(h(\ldots \oplus C_{n-2}) \oplus C_{n-1}) \oplus C_n)$$
 
@@ -160,7 +160,7 @@ But, blockchains can store any kind of data.
 In this project we will be storing blobs of text.
 
 Creating a block and adding it to the chain is very straightfoward.
-The block also needs a reference to a previous block header (or `NULL` for the "genesis" block.)
+The block also needs a reference to a previous block header (or `NULL` for the genesis block.)
 We simply hash the contents and the previous block header and 
 assign it to the new header.
 
@@ -192,21 +192,21 @@ block_header_t build_block(const block_header_t* previous, const char* contents,
 
 @s What is proof-of-work?
 
-Blockchains can effectively store
-records over time, but the headers must always
-be obtained by a trusted party, whether 
-it's yourself or your bank.
-To verify a block, you need the headers.
-If you don't already have them, a malicious person could give you fake headers,
+Blockchains don't automatically make a record trustworthy.
+To verify a block, you need the headers which must be obtained by a trusted
+party, whether it's yourself or your bank.
+A malicious person could give you fake headers in a completely valid chain,
 and you would have no way to tell they weren't *genuine*.
 They could also add new headers to a blockchain
-you trust and the new ones would look just as valid as the old one!
+you trust and the new ones would look just as valid as the old ones!
+In most cases, if you trust someone enough to give you blockchain headers
+you also trust them to just give you the data.
 
-So, blockchains can be useful record keeping tools among trusted groups, but its not clear
+So, blockchains can be useful record keeping tools among trusted groups, but it's not clear
 at this point how they can keep any kind of contested record.
 The challenge posed by Bitcoin is to store a record of financial 
-transactions that everyone can agree on.
-We shouldn't have to trust another person to keep those records safe.
+transactions that complete strangers can agree on.
+Internet money shouldn't require entrustng funds to another person.
 This is the problem solved by **proof-of-work**. 
 It provides a simple rule that anyone can use to "objectively" determine
 whether a given blockchain is the "right" one.
@@ -223,7 +223,7 @@ This limits the rate at which blocks can be produced to the speed of CPUs.
 In the Bitcoin network, computers across the world
 are constantly racing to be the first to solve a problem
 so they can produce a block.
-But the difficulty of the problem ensures that it will 
+But the difficulty of the mining problems ensure that it will 
 take a certain amount of time, before anyone can produce a block,
 and so adds an additional property:
 *longer chains have had more CPU resources spent making them.*
@@ -237,20 +237,23 @@ spent on it.
 > The majority decision is represented by the longest chain,
 > which has the greatest proof-of-work effort invested in it." - Satoshi Nakamoto
 
-Proof-of-work also makes it very difficult to tamper with old records or make a fake chain.
-In order to rewrite a chain, you have to spend the CPU resources
+Proof-of-work also makes it very difficult to tamper with old records or produce a fradulent chain.
+In order to rewrite a block, you have to spend the CPU resources
 to do so.
-To go back two blocks, double the amount of work must be done, and 
+To go back two blocks requires double the amount of work, and 
 so on.
 Meanwhile, the original chain is constantly being extended by CPUs across the globe.
+So not only would an attacker have to redo all the work that has been done, but it would have
+to do it faster than the rest of the Bitcoin network creates new blocks.
 
 I put the words "objectively" and "right" in quotes because you now 
-know those claims are a bit dubious.
-The "right" chain is defined by a consensues of CPU power.
-A group or individual who wields a lot of CPU power can change tehe consensus.
-The right one is the one that the most mining power has been put into.
-The only objective thing we know is which chain has had the most CPU
-resources spent on it.
+know they are a bit dubious.
+The "right" chain is defined by the consensues of CPU power.
+A group or individual who wields a lot of CPU power can change the consensus.
+The right blockchain is the one that the most mining power has been put into.
+The only objective thing we can determine is if one chain has had more CPU resources spent on it than another.
+It is certainly a clever system, with carefully structured incentives, but it
+has limitations.
 
 > "Bitcoin can thus be understood as a technology that converts electricity to truthful records through the expenditure of processing power." - Safedean Ammous.
 
@@ -263,16 +266,19 @@ In other words $h(header) < T$.
 By "less than" we mean the usual [byte by byte](https://en.cppreference.com/w/c/string/byte/memcmp) lexographic
 comparsion, like alphabetical order.
 (For example `0000 0001` is less than `0000 0010`)
+That's all we need. A block header is valid if its within the range and invalid otherwise.
+Finding a hash that fits this requirement is the difficult problem that requires
+CPU resources.
 
 ### Target
 
 The target `T` can be any hash. However, the smaller (in ordering) it is
-, the more difficult it is to find a valid hash, because there
+the more difficult it is to find a valid hash, because there
 are a fewer hashes within the valid range.
 
 The target may be different for each block.
-This allows Bitcoin to adjust mining difficulty to adapt
-to improving CPUs.
+This allows Bitcoin to adjust [mining difficulty](https://en.bitcoin.it/wiki/Difficulty)
+to adapt to improving CPUs.
 But in our project we will use a constant target.
 
 --- target
@@ -290,10 +296,9 @@ target[2] = 0x0F;
 
 ### Nonce
 
-Right now the header is fixed, it contains only two immutable fields,
-the contents hash, and the previous block hash.
-So how can we get a hash below the target? 
-We need to add a few additional fields to the headers.
+Right now the header is immutable.
+It contains only the contents hash, and the previous block hash which are bound.
+So to get the header hash below the target we need to add a few additional fields to the headers.
 These are called the **nonce** and **timestamp**.
 
 Add the following to the `block_header_t` struct from before.
@@ -310,12 +315,13 @@ uint32_t nonce;
 
 To make a block header valid, the nonce
 is adjusted until the header hashes in the valid range.
-This adjustment process is the difficult problem referred to earlier.
-It's really hard to find a valid hash.
+Searching for a hash can take some time.
+Depending on difficulty it can be really hard to find a valid hash.
 There is no rhyme or reason to guessing the nonce.
 The miner just tries as many as it can!
 
 Let's write a loop that just tests numbers in order:
+
 (It will be placed in a mining function below.)
 
 --- nonce search
@@ -373,28 +379,25 @@ void mine_block(block_header_t* header)
 In the real Bitcoin network, miners
 are connected together in a peer-to-peer network.
 They receive transactions from clients to include in blocks, and
-share blocks that they produce, cooperatively building a chain.
+share blocks they know about, cooperatively building a chain.
 
 Our tiny blockchain won't have any network or peers,
 and will just run locally on a computer.
 However we still want to get a real proof-of-work effect;
-that longer chains have more CPU power spent on them.
-So we need to pick a task that can run without user
-intervention.
+that longer chains have more work spent on them.
+So we need to pick a task that can run without user intervention.
 
-Our blockchain will simply take take lines of text and encode them in blocks,
-as fast as it can.
-This isn't very useful, but is still a good illustrative
-example of how the chain works.
-Storing text in the blocks actually follows Bitcoin tradition.
-The [genesis block](https://en.bitcoin.it/wiki/Genesis_block).
-includes a headline from a 2009 English newspaper.
-
-![the times 2009](img/thetimes.jpg)
+The task I chose is to simply take lines of text from a file and encode them in blocks, as fast as possible.
+This isn't very useful, but is still a good illustrative example of the constant production
+of blocks on the real network.
+Storing text in the chain actually follows Bitcoin tradition.
+The [genesis block](https://en.bitcoin.it/wiki/Genesis_block) includes this headline from a 2009 English newspaper:
 
 > "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
 
-We should follow the tradition and use it for our gensis block.
+![the times 2009](img/thetimes.jpg)
+
+We will follow the tradition and include it for our genesis block.
 
 --- genesis block
 printf("creating genesis block...\n");
@@ -402,8 +405,8 @@ char genesis_data[] = "The Times 03/Jan/2009 Chancellor on brink of second bailo
 block_header_t genesis = build_block(NULL, genesis_data, sizeof(genesis_data));
 ---
 
-To keep our program simple, we can simply read text 
-line by line from stdin and put each line in a block.
+So we don't have to worry about finding files to read,
+the program will read text line by line from stdin and put each line in a block.
 The block headers will be written into a file as they are mined.
 
 --- input loop
@@ -500,12 +503,12 @@ Run the program by inputting the file to `stdin`.
     creating block 0: The Project Gutenberg EBook of Gorgias, by Plato
 
 If the program produces blocks too slowly, or quickly, adjust the 
-**target** variable.
+@{target} variable.
 
 @s Further Study
 
-We have only just scratched the surface and there is much more to learn
-to understand Bitcoin.
+We have only just scratched the surface and there is much more to learn from Bitcoin.
+You will certainly want to read the [original whitepaper](research/bitcoin.pdf).
 Here are a few topics to get you started.
 
 ### Merkle Trees
@@ -529,29 +532,48 @@ transaction is included in a block.
 It has largely been overtaken by professional mining farms
 so that individual computers cannot compete.
 
-The most important factor in mining performance is how many
+The most important metric in mining performance is how many
 hashes you can produce in a second.
 GPUs and special designed hardware called [ASICs](https://en.bitcoin.it/wiki/ASIC) can calculate
 sha256 hashes far faster than CPUs.
 
 Read [The State of Cryptocurrency Mining](https://blog.sia.tech/the-state-of-cryptocurrency-mining-538004a37f9b).
+Should we return to "One CPU, one vote"?
+Is it even [possible](https://hackernoon.com/asic-resistance-is-nothing-but-a-blockchain-buzzword-b91d3d770366)?
 
 ### Chain Reorginization
+
+![chain reorganization](img/reorg.png)
+
+(Image thanks to [Nakamoto Institute](https://nakamotoinstitute.org/about/))
 
 As I mentioned, Bitcoin miners create and share blocks in a peer-to-peer network.
 A lot must go on to ensure peers stay connected, and new blocks
 are spread throughout the network.
-
-Due to network delays, two alternative tails to the chain may start
-competing, and the network must resolve them.
+Due to network delays, several alternative tails may form and start competing to be the longest.
+The nodes will follow a few of these until a clear winner arises.
 See [Orphan Blocks](https://en.bitcoin.it/wiki/Orphan_Block).
 
-A [large debate](https://en.bitcoin.it/wiki/Block_size_limit_controversy) in the Bitcoin community occured over the block size.
-Larger blocks can store more transactions, and hence increase the speed of the chain,
+A [major debate](https://en.bitcoin.it/wiki/Block_size_limit_controversy) in the Bitcoin community occured over the block size
+and resulted in the fork of Bitcoin Cash.
+Large blocks can store more transactions, and hence increase the speed of the chain,
 but they also take longer to propogate around the internet.
-This may limit Bitcoin participants to those with fast internet access,
-or introduce more chain reorganizations, as blocks are slow to propogate.
+This may limit Bitcoin participants to only those with fast internet access (like datacenters),
+or introduce more chain reorganizations, as blocks become slower to propogate.
 
+### Economic Incentives
 
+Why do miners mine? 
+Why should they [include transactions](https://en.bitcoin.it/wiki/Miner_fees) from individuals in the chain?
+Do [miners control](https://en.bitcoin.it/wiki/Bitcoin_is_not_ruled_by_miners) the chain?
+Does Bitcoin really eliminate the costs of transaction enforcement?
+How could someone disrupt Bitcoin?
+
+These are all great questions to learn about, but you may have a harder
+time finding reliable information.
+Here are a few resources:
+
+- [Fundamentals of Proof of Work](https://blog.sia.tech/fundamentals-of-proof-of-work-beaa68093d2b)
+- [What's really Driving he Cryptocurrency Phenomenon](https://iterative.capital/thesis/)
 
 

@@ -577,7 +577,7 @@ or introduce more chain reorganizations, as blocks become slower to propogate.
 
 ### Economic Incentives
 
-Why do miners mine? 
+Why do miners [mine](https://blog.sia.tech/fundamentals-of-proof-of-work-beaa68093d2b)?
 Why should they [include transactions](https://en.bitcoin.it/wiki/Miner_fees) from individuals in the chain?
 Do [miners control](https://en.bitcoin.it/wiki/Bitcoin_is_not_ruled_by_miners) the chain?
 Does Bitcoin really eliminate the costs of transaction enforcement?
@@ -585,9 +585,3 @@ How could someone disrupt Bitcoin?
 
 These are all great questions to learn about, but you may have a harder
 time finding reliable information.
-Here are a few resources:
-
-- [Fundamentals of Proof of Work](https://blog.sia.tech/fundamentals-of-proof-of-work-beaa68093d2b)
-- [What's really Driving he Cryptocurrency Phenomenon](https://iterative.capital/thesis/)
-
-

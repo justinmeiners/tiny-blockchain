@@ -454,7 +454,7 @@ We have only just scratched the surface, and there is much more to learn from Bi
 You will certainly want to read the [original whitepaper](research/bitcoin.pdf).
 Here are a few topics to get you started.
 
-### Merkle Trees
+### Merkle trees
 
 ![Merkle tree](img/merkle_tree.gif)
 
@@ -476,7 +476,7 @@ Read [The State of Cryptocurrency Mining](https://blog.sia.tech/the-state-of-cry
 Should we return to "One CPU, one vote"?
 Is it even [possible](https://hackernoon.com/asic-resistance-is-nothing-but-a-blockchain-buzzword-b91d3d770366)?
 
-### Chain Reorginization
+### Chain reorginization
 
 ![chain reorganization](img/reorg.png)
 
@@ -492,7 +492,7 @@ A [major debate](https://en.bitcoin.it/wiki/Block_size_limit_controversy) in the
 Large blocks can store more transactions, and hence increase the speed of the chain, but they also take longer to propagate around the internet.
 This may restrict Bitcoin participants to only those with fast internet access (like data centers), or introduce more chain reorganizations as blocks become slower to propagate.
 
-### Economic Incentives
+### Economic incentives
 
 Why do miners [mine](https://blog.sia.tech/fundamentals-of-proof-of-work-beaa68093d2b)?
 Why should they [include transactions](https://en.bitcoin.it/wiki/Miner_fees) from individuals in the chain?
@@ -501,3 +501,11 @@ Does Bitcoin really eliminate the costs of transaction enforcement?
 How could someone disrupt Bitcoin?
 
 These are all great questions to learn about, but you may have a harder time finding reliable information.
+
+### Special thanks
+
+Special thanks to my reviewers for editing and feedback:
+
+- [Derek McDaniel](https://github.com/derekmc)
+- [Hunter Rasmussen](https://github.com/HunterRasmussen)
+- [Ryan Pendleton](https://github.com/rpendleton)

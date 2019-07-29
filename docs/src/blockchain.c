@@ -49,7 +49,7 @@ void mine_block(block_header_t* header)
     /* target */
     /* this controls the difficulty.
        I chose this target because it works well on my computer.
-       feel free to try out others. */
+       Feel free to try out others. */
     
     uint8_t target[32];
     memset(target, 0, sizeof(target));

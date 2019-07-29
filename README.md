@@ -1,11 +1,8 @@
-# tiny-blockchain
-Write your own proof-of-work blockchain.
+# Write Your Own Proof-of-Work Blockchain.
 
-IN PROGRESS TUTORIAL
+A literate programming tutorial.
 
-(it will hopefully be finished soon.)
-
-## Special Thanks
+## Acknowledgements
 
 - [Alain Mosnier](https://github.com/amosnier/sha-2) wrote the sha256 libraries.
 - [Gutenberg](https://www.gutenberg.org/ebooks/1672) for providing Plato's Gorgias.

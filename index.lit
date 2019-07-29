@@ -37,7 +37,7 @@ I hope to bring a valuable perspective by focusing on the essentials.
 
 This project will be written in C, although it is easy to translate to other languages.
 To start, create a new `.c` file to place code in.
-You will also need to include [sha-256.h](src/sha-256.h) and [sha-256.c](src/sha-256.c)(1) for hashes (or use your language's library).
+You will also need to include [sha-256.h](src/sha-256.h) and [sha-256.c](src/sha-256.c) for hashes (or use your language's library).
 
 > **Note:** This is a [literate program](https://en.wikipedia.org/wiki/Literate_programming).
 > This means you are reading the source code right now!

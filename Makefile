@@ -1,14 +1,13 @@
-all: docs/src/blockchain.c docs/index.html
+.PHONY: all main clean
 
-docs/src/blockchain.c docs/src/blockchain.cpp: index.lit
-	lit --tangle $<
-	mv blockchain.c docs/src/
+all: source docs/index.html
 
-docs/index.html: index.lit main.css
-	lit --weave $<
-	mv index.html docs/
+source:
+	srcweave --tangle docs/src/ index.lit
 
-.PHONY:
+docs/index.html: index.lit
+	srcweave --format srcweave-format --weave docs/ $<
+
 clean:
 	rm -f docs/src/blockchain.c
 	rm -f docs/src/lc3-alt.cpp

@@ -1,33 +1,14 @@
-# Write your own Blockchain
-
-
-@code_type c .c
-@comment_type /* %s */
-@add_css main.css
-
-@title Write your Own Proof-of-Work Blockchain
-
-@s
+# Write your Own Proof-of-Work Blockchain
 
 By: [**Justin Meiners**](https://github.com/justinmeiners).
 
 View the final code and other resources in the [GitHub repo](https://github.com/justinmeiners/tiny-blockchain).
 
-#### 1. Contents
+### Contents
 
-1. [Contents](#1:1)
-2. [Introduction](#1:2)
-3. [Hash review](#1:3)
-4. [What is a blockchain?](#1:4)
-5. [Creating blocks](#1:5)
-6. [What is proof-of-work?](#1:6)
-7. [Mining](#1:7)
-8. [What will we store in the blockchain?](#1:8)
-9. [Utilities](#1:9)
-10. [Running the program](#1:10)
-11. [Further study](#1:11)
+@toc
 
-@s Introduction
+## Introduction
 
 This article will teach you how to write a tiny proof-of-work blockchain, focusing on the Bitcoin implementation.
 I emphasize "proof-of-work" because as we shall see, this is the key innovation that allows Bitcoin to store information in an "objectively" verifiable way.
@@ -43,7 +24,7 @@ You will also need to include [sha-256.h](src/sha-256.h) and [sha-256.c](src/sha
 > This means you are reading the source code right now!
 > The final output was created by ["weaving"](https://github.com/zyedidia/Literate) the blocks of code together.
 
-@s Hash review
+## Hash review
 
 You are probably familiar with [hashes](https://en.wikipedia.org/wiki/Cryptographic_hash_function), but just to review, a hash is a function which maps a piece of data of any length to a short checksum.
 The essential property of a hash is that it's *one way*.
@@ -64,7 +45,7 @@ To check your knowledge of hashes, here are some questions to consider:
 - Could there be a hash that only one thing maps to? In other words, only a single input could produce it?
 - Why is there at least one hash that infinitely many things map to?
 
-@s What is a blockchain?
+## What is a blockchain?
 
 Hash checksums are helpful for verifying the *state* of data at a fixed snapshot in time.
 But sometimes, we want to ensure the *history* of some data over time.
@@ -130,10 +111,10 @@ Applying this to the bank account example, each day's transactions could be stor
 Given the last header in the chain (such as a bank statement), new transactions could be safely added in new blocks, but any changes to previous blocks would be detected.
 Because each header references the previous block, and that previous block references the one *before it*, changes propagate like dominos knocking each other over.
 
-The domino effect can also be seen in the expanded equation for the hash of the last block where $h$ is a hash function and $C_{i}$ is the contents of the $i$th block.
+The domino effect can also be seen in the expanded equation for the hash of the last block where `h` is a hash function and `C(i)` is the contents of the `i`th block.
 See how it includes the contents of each preceding block?
 
-$$h(h(h(\ldots \oplus C_{n-2}) \oplus C_{n-1}) \oplus C_n)$$
+    h(h(h(... + C(n-2)) + C(n-1)) + C(n))
 
 If you use Git version control, you are already familiar with this!
 Each commit is a hash of the state of the code and the hash of the previous commit.
@@ -141,7 +122,7 @@ If you change an old commit, all future commits must also change.
 Just like the bank account example, the history of the code matters just as much as the state.
 Differing histories result in different commit hashes.
 
-@s Creating blocks
+## Creating blocks
 
 The Bitcoin blockchain works just like a bank account.
 It stores a ledger of [financial transactions](https://en.bitcoin.it/wiki/Transaction).
@@ -178,7 +159,7 @@ block_header_t build_block(const block_header_t* previous, const char* contents,
 }
 ---
 
-@s What is proof-of-work?
+## What is proof-of-work?
 
 Blockchains don't automatically make a record trustworthy.
 To verify a block, you must obtain the headers from a trusted party, whether it's yourself or your bank.
@@ -223,10 +204,10 @@ It is certainly a clever system, with carefully structured incentives, but it ha
 
 > "Bitcoin can thus be understood as a technology that converts electricity to truthful records through the expenditure of processing power." - Safedean Ammous.
 
-@s Mining
+## Mining
 
 To add proof-of-work, we add an additional requirement to the chain, which is that the hash of any block header must be less than some **target** hash.
-In other words $h(header) < T$.
+In other words `h(header) < T`.
 By "less than" we mean the usual [byte by byte](https://en.cppreference.com/w/c/string/byte/memcmp) lexicographic comparison, like alphabetical order.
 (For example `0000 0001` is less than `0000 0010`)
 That's all we need. A block header is valid if it is within the range, and invalid otherwise.
@@ -387,7 +368,7 @@ while (!feof(stdin))
 }
 ---
 
-@s Utilities
+## Utilities
 
 The project is almost ready, but we need a few more boring bits of code.
 These are not relevant to understanding the actual blockchain.
@@ -434,13 +415,12 @@ int main(int argc, const char* argv[])
 At this point, you should have all the code to compile the project.
 If you are not sure where something belongs, follow the references or refer to the [final code](src/blockchain.c)
 
-@s Running the program
+## Running the program
 
 I have provided [Plato's Gorgias](docs/data/gorgias.txt) as a sample text to store in our blockchain. Go ahead and download it.
 Run the program by inputting the file to `stdin`.
 
     cat  ./gorgias.txt | ./blockchain 
-
 
     creating genesis block...
     done. nonce: 427455 hash: 0x000003e9ea9bb66eae1b34a4a1b482f3fcf0ee1ca0589ae16de8a6c9a410285f
@@ -448,7 +428,7 @@ Run the program by inputting the file to `stdin`.
 
 If the program produces blocks too slowly, or quickly, adjust the @{target} variable.
 
-@s Further study
+## Further study
 
 We have only just scratched the surface, and there is much more to learn from Bitcoin.
 You will certainly want to read the [original whitepaper](research/bitcoin.pdf).
@@ -502,7 +482,7 @@ How could someone disrupt Bitcoin?
 
 These are all great questions to learn about, but you may have a harder time finding reliable information.
 
-### Special thanks
+### Acknowledgements
 
 Special thanks to my reviewers for editing and feedback:
 

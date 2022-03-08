@@ -1,4 +1,3 @@
-/* blockchain.c */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -11,15 +10,12 @@
 
 #define LINE_MAX 4096
 
-/* print hashes */
 void fprint_hash(FILE* f, uint8_t* hash)
 {
     fprintf(f, "0x");
     for (int i = 0; i < 32; ++i)
         fprintf(f, "%02x", hash[i]);
 }
-
-/* block header */
 typedef struct
 {
     /* Length of the data in the block */
@@ -31,7 +27,6 @@ typedef struct
     /* prevents previous data from changing */
     uint8_t previous_hash[32];
 
-    /* proof-of-work entries */
     /* when this block started being mined */
     uint32_t timestamp; 
     
@@ -39,14 +34,10 @@ typedef struct
        this is adjusted by the miner,
        until a suitable hash is found */
     uint32_t nonce;
-
 } block_header_t;
 
-
-/* mining */
 void mine_block(block_header_t* header)
 {
-    /* target */
     /* this controls the difficulty.
        I chose this target because it works well on my computer.
        Feel free to try out others. */
@@ -58,13 +49,11 @@ void mine_block(block_header_t* header)
     /* too hard?: try target[2] = 0xFF
        too easy?: try target[2] = 0x01 */
 
-
     while (1)
     {
         /* MINING: start of the mining round */
         header->timestamp = (uint64_t)time(NULL); 
 
-        /* nonce search */
         /* adjust the nonce until the block header is < the target hash */
         uint8_t block_hash[32];
         
@@ -77,7 +66,6 @@ void mine_block(block_header_t* header)
                 /* we found a good hash */
                 return;
         }
-
  
         /* The uint32 expired without finding a valid hash.
            Restart the time, and hope that this time + nonce combo works. */
@@ -86,8 +74,6 @@ void mine_block(block_header_t* header)
     /* this should never happen */
     assert(0);
 }
-
-/* build block */
 block_header_t build_block(const block_header_t* previous, const char* contents, uint64_t length)
 {
     block_header_t header;
@@ -112,17 +98,13 @@ block_header_t build_block(const block_header_t* previous, const char* contents,
     return header;
 }
 
-
 int main(int argc, const char* argv[])
 {
     FILE* output_file = fopen("chain.bin", "wb");
 
-    /* input loop */
-    /* genesis block */
     printf("creating genesis block...\n");
     char genesis_data[] = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
     block_header_t genesis = build_block(NULL, genesis_data, sizeof(genesis_data));
-
     
     int block_no = 0;
     block_header_t previous = genesis;
@@ -151,9 +133,6 @@ int main(int argc, const char* argv[])
         ++block_no;
     }
 
-
     fclose(output_file);
     return 1;
 }
-
-

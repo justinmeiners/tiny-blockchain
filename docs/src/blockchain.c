@@ -20,35 +20,19 @@ typedef struct
 {
     /* Length of the data in the block */
     uint32_t contents_length;
-    /* Hash of the block contents.
-       Prevents contents from changing
-       (in Bitcoin this would actually be the "merkle root" */
+    /* Hash of the block contents. */
+    /* 32 is the number of bytes in a sha256 hash */
     uint8_t contents_hash[32];
-    /* prevents previous data from changing */
     uint8_t previous_hash[32];
 
     /* when this block started being mined */
     uint32_t timestamp; 
-    
-    /* nonce.
-       this is adjusted by the miner,
-       until a suitable hash is found */
+
+    /* This is adjusted to make the hash of this header fall in the valid range. */
     uint32_t nonce;
 } block_header_t;
-
-void mine_block(block_header_t* header)
+void mine_block(block_header_t* header, const uint8_t* target)
 {
-    /* this controls the difficulty.
-       I chose this target because it works well on my computer.
-       Feel free to try out others. */
-    
-    uint8_t target[32];
-    memset(target, 0, sizeof(target));
-    target[2] = 0x0F;
-    
-    /* too hard?: try target[2] = 0xFF
-       too easy?: try target[2] = 0x01 */
-
     while (1)
     {
         /* MINING: start of the mining round */
@@ -92,47 +76,62 @@ block_header_t build_block(const block_header_t* previous, const char* contents,
     
     /* add data hash */
     calc_sha_256(header.contents_hash, contents, length);
-
-    /* mining. disucssed later */
-    mine_block(&header);
     return header;
 }
 
+/* this controls the difficulty.
+   I chose this target because it works well on my computer.
+   Feel free to try out others. */
+
+uint8_t target[32];
+
 int main(int argc, const char* argv[])
 {
-    FILE* output_file = fopen("chain.bin", "wb");
+    memset(target, 0, sizeof(target));
 
-    printf("creating genesis block...\n");
-    char genesis_data[] = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
-    block_header_t genesis = build_block(NULL, genesis_data, sizeof(genesis_data));
+    /* too hard?: try target[2] = 0xFF
+       too easy?: try target[2] = 0x01 */
+    target[2] = 0x0F;
+
     
     int block_no = 0;
-    block_header_t previous = genesis;
+    block_header_t previous;
+    
     while (!feof(stdin))
     {
-        /* hash the solved header. (only for display purposes) */
-        uint8_t test_hash[32];
-        calc_sha_256(test_hash, &previous, sizeof(block_header_t));
-        printf("done. nonce: %i hash: ", previous.nonce);
-        fprint_hash(stdout, test_hash);
-        printf("\n");
-    
-        /* dump header to a file */
-        fwrite(&previous, sizeof(block_header_t), 1, output_file);
-     
         /* read data to put in the block */
         char line_buffer[LINE_MAX];
         fgets(line_buffer, LINE_MAX, stdin);  
-    
-        printf("creating block %i: ", block_no);
-        printf("%s\n", line_buffer);
         uint64_t size = strnlen(line_buffer, LINE_MAX) + 1;
-        block_header_t header = build_block(&previous, line_buffer, size);
-      
+    
+    
+        block_header_t* previous_ptr = block_no == 0 ? NULL : &previous;
+        fprintf(stderr, "creating block %i: ", block_no);
+        fprintf(stderr, "%s\n", line_buffer);
+         
+        block_header_t header = build_block(previous_ptr, line_buffer, size);
+        mine_block(&header, target);
         previous = header;
         ++block_no;
+    
+        /* hash the solved header. (only for display purposes) */
+        printf("previous: ");
+        fprint_hash(stdout, previous.previous_hash);
+        printf("\n");
+    
+        printf("contents: ");
+        fprint_hash(stdout, previous.contents_hash);
+        printf("\n");
+    
+        printf("timestamp: %d\n", previous.timestamp);
+        printf("nonce: %d\n", previous.nonce);
+    
+        uint8_t test_hash[32];
+        calc_sha_256(test_hash, &previous, sizeof(block_header_t));
+        printf("hash: ");
+        fprint_hash(stdout, test_hash);
+        printf("\n\n\n");
+    
     }
-
-    fclose(output_file);
     return 1;
 }

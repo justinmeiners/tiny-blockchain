@@ -107,6 +107,17 @@ The **header** contains some metadata about the block, along with two hashes:
 
 2. The hash of the previous block header (or 0 if there is none).
 
+--- block header
+typedef struct
+{
+    /* Length of the data in the block */
+    uint32_t contents_length;
+    /* Hash of the block contents. */
+    /* 32 is the number of bytes in a sha256 hash */
+    uint8_t contents_hash[32];
+    uint8_t previous_hash[32];
+} block_header_t;
+---
 
 The use of the first hash is obvious. 
 To check whether some data is in our chain,
@@ -139,30 +150,16 @@ Given some small header information, one can verify whether a given record:
 1. Belongs in the sequence.
 2. Is in the correct order, relative to the other records.
 
-### Code
-
-Let's dig into some code.
-We need one dependency: [sha-256.h](src/sha-256.h) and [sha-256.c](src/sha-256.c)
-which provides the hash function `calc_sha_256`.
-
-Our header will follow the description above : 
-
---- block header
-typedef struct
-{
-    /* Length of the data in the block */
-    uint32_t contents_length;
-    /* Hash of the block contents. */
-    /* 32 is the number of bytes in a sha256 hash */
-    uint8_t contents_hash[32];
-    uint8_t previous_hash[32];
-} block_header_t;
----
+### Adding blocks
 
 Creating a block and adding it to the chain is straightforward.
 The arguments include a reference to a previous block header (or `NULL` for the initial "genesis block"),
 but not any of the previous contents.
 We simply hash the new contents and the previous block header and assign it to the new header.
+
+We need one dependency: [sha-256.h](src/sha-256.h) and [sha-256.c](src/sha-256.c)
+which provides the hash function `calc_sha_256`.
+
 
 --- build block
 block_header_t build_block(const block_header_t* previous, const char* contents, uint64_t length)
@@ -183,9 +180,6 @@ block_header_t build_block(const block_header_t* previous, const char* contents,
     
     /* add data hash */
     calc_sha_256(header.contents_hash, contents, length);
-
-    /* mining. discussed later */
-    mine_block(&header);
     return header;
 }
 ---
@@ -298,10 +292,8 @@ If all numbers have been tried, the timestamp is reset to the current time, and 
 Here is the complete mining function with time reset:
 
 --- mining
-void mine_block(block_header_t* header)
+void mine_block(block_header_t* header, const uint8_t* target)
 {
-    @{target}
-
     while (1)
     {
         /* MINING: start of the mining round */
@@ -327,22 +319,14 @@ as there are fewer hashes within the valid range.
 
 In our project, we will use a constant target.
 
---- target
-/* this controls the difficulty.
-   I chose this target because it works well on my computer.
-   Feel free to try out others. */
-
-uint8_t target[32];
-memset(target, 0, sizeof(target));
-target[2] = 0x0F;
-
-/* too hard?: try target[2] = 0xFF
-   too easy?: try target[2] = 0x01 */
----
 
 In Bitcoin, the target actually changes with each block.
 This allows bitcoin to adjust the [mining difficulty](https://en.bitcoin.it/wiki/Difficulty)
 in order to regulate the speed of block production as computers get faster and faster.
+
+
+**Exercise:** Describe a method of adjusting the target based on changing mining effort,
+that will e, in a manner which leads to
 
 ## Objectivity
 
@@ -397,9 +381,6 @@ is practically impossible.
 > "Proof-of-work is essentially one-CPU-one-vote.
 > The majority decision is represented by the longest chain, which has the greatest proof-of-work effort invested in it." - Satoshi Nakamoto
 
-**Exercise:** 
-
-
 Proof-of-work also makes it very difficult to tamper with old records or produce a fraudulent chain.
 To rewrite a block, you have to spend the CPU resources to do so.
 To go back two blocks requires double the amount of work, and so on.
@@ -415,71 +396,76 @@ It is certainly a clever system, with carefully structured incentives, but it ha
 
 ## Storing data
 
-As mentioned before, a blockchain can store any kind of data.
-The Bitcoin blockchain works just like a bank account.
-It stores a ledger of [financial transactions](https://en.bitcoin.it/wiki/Transaction)
-each referencing previously deposited amounts and transfering them to new addresses.
-Bitcoin takes great care to ensure this data packs efficiently, to maximize usage
-of every block.
+The Bitcoin blockchain stores a ledger of [financial transactions](https://en.bitcoin.it/wiki/Transaction)
+each referencing previously deposited amounts and transferring them to new addresses.
+A lot of the Bitcoin code is dedicated to the network protocol for accepting transactions, broadcasting them, and syncing the state of the chain
+across the internet.
+All of this is interesting stuff, but not necessary to understand proof of work.
 
-In this article, we won't worry too much about what goes in the block.
-We will specifically store blobs of text.
+To keep things simple, our blockchain will just run locally on a computer.
+However, we still want a real proof-of-work effect; that longer chains have more work spent on them.
+We will demonstrate this by taking lines from a text file, encoding each of them in blocks,
+and appending them onto a growing chain, as fast as possible.
+This isn't very useful, but it is still a good illustration of the constant production of blocks on the Bitcoin network.
 
-In the real Bitcoin network, miners are connected in a peer-to-peer network.
-They receive transactions from clients to include in blocks and share blocks they know about, cooperatively building a chain.
-
-Our tiny blockchain won't have any network or peers, and will just run locally on a computer.
-However, we still want to get a real proof-of-work effect;
-that longer chains have more work spent on them.
-So we need to pick a task that can run without user intervention.
-
-The task I chose is to take lines of text from a file and encode them in blocks, as fast as possible.
-This isn't very useful, but it is still a good illustrative example of the constant production of blocks on the Bitcoin network.
-Storing text in the chain actually follows Bitcoin tradition, where the [genesis block](https://en.bitcoin.it/wiki/Genesis_block) includes this headline from a 2009 English newspaper:
+Storing text in blocks does follow Bitcoin tradition.
+The [genesis block](https://en.bitcoin.it/wiki/Genesis_block) curiously includes this headline from a 2009 English newspaper:
 
 > "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
 
 ![the times 2009](img/thetimes.jpg)
 
+
+
+
 We will follow the tradition and include it for our genesis block.
 
---- genesis block
-printf("creating genesis block...\n");
-char genesis_data[] = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
-block_header_t genesis = build_block(NULL, genesis_data, sizeof(genesis_data));
----
+opening and closing files is always a pain, so we will just follow UNIX fashion,
+and 
 
 So we don't have to worry about finding files to read, the program will read text line by line from stdin and put each line in a block.
 The block headers will be written into a file as they are mined.
 
 --- input loop
-@{genesis block}
 
 int block_no = 0;
-block_header_t previous = genesis;
+block_header_t previous;
+
 while (!feof(stdin))
 {
-    /* hash the solved header. (only for display purposes) */
-    uint8_t test_hash[32];
-    calc_sha_256(test_hash, &previous, sizeof(block_header_t));
-    printf("done. nonce: %i hash: ", previous.nonce);
-    fprint_hash(stdout, test_hash);
-    printf("\n");
-
-    /* dump header to a file */
-    fwrite(&previous, sizeof(block_header_t), 1, output_file);
- 
     /* read data to put in the block */
     char line_buffer[LINE_MAX];
     fgets(line_buffer, LINE_MAX, stdin);  
-
-    printf("creating block %i: ", block_no);
-    printf("%s\n", line_buffer);
     uint64_t size = strnlen(line_buffer, LINE_MAX) + 1;
-    block_header_t header = build_block(&previous, line_buffer, size);
-  
+
+
+    block_header_t* previous_ptr = block_no == 0 ? NULL : &previous;
+    fprintf(stderr, "creating block %i: ", block_no);
+    fprintf(stderr, "%s\n", line_buffer);
+     
+    block_header_t header = build_block(previous_ptr, line_buffer, size);
+    mine_block(&header, target);
     previous = header;
     ++block_no;
+
+    /* hash the solved header. (only for display purposes) */
+    printf("previous: ");
+    fprint_hash(stdout, previous.previous_hash);
+    printf("\n");
+
+    printf("contents: ");
+    fprint_hash(stdout, previous.contents_hash);
+    printf("\n");
+
+    printf("timestamp: %d\n", previous.timestamp);
+    printf("nonce: %d\n", previous.nonce);
+
+    uint8_t test_hash[32];
+    calc_sha_256(test_hash, &previous, sizeof(block_header_t));
+    printf("hash: ");
+    fprint_hash(stdout, test_hash);
+    printf("\n\n\n");
+
 }
 ---
 
@@ -497,7 +483,7 @@ void fprint_hash(FILE* f, uint8_t* hash)
 }
 ---
 
----blockchain.c
+--- /blockchain.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -515,13 +501,21 @@ void fprint_hash(FILE* f, uint8_t* hash)
 @{mining}
 @{build block}
 
+/* this controls the difficulty.
+   I chose this target because it works well on my computer.
+   Feel free to try out others. */
+
+uint8_t target[32];
+
 int main(int argc, const char* argv[])
 {
-    FILE* output_file = fopen("chain.bin", "wb");
+    memset(target, 0, sizeof(target));
+
+    /* too hard?: try target[2] = 0xFF
+       too easy?: try target[2] = 0x01 */
+    target[2] = 0x0F;
 
     @{input loop}
-
-    fclose(output_file);
     return 1;
 }
 
@@ -541,7 +535,7 @@ Run the program by inputting the file to `stdin`.
     done. nonce: 427455 hash: 0x000003e9ea9bb66eae1b34a4a1b482f3fcf0ee1ca0589ae16de8a6c9a410285f
     creating block 0: The Project Gutenberg EBook of Gorgias, by Plato
 
-If the program produces blocks too slowly, or quickly, adjust the @{target} variable.
+If the program produces blocks too slowly, or quickly, adjust the  variable.
 
 ## Further study
 

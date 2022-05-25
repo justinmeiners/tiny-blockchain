@@ -127,6 +127,22 @@ The <strong>header</strong> contains some metadata about the block, along with t
 </ol>
 
 
+<div class="code-block">
+<span class="block-header">
+<strong class="block-title"><em><a id="bblock_header:110" href="#bblock_header:110">block header</a></em></strong></span>
+<pre class="prettyprint"><code class="">typedef struct
+{
+    /* Length of the data in the block */
+    uint32_t contents_length;
+    /* Hash of the block contents. */
+    /* 32 is the number of bytes in a sha256 hash */
+    uint8_t contents_hash[32];
+    uint8_t previous_hash[32];
+} block_header_t;
+</code></pre>
+<p class="block-usages"><small>Used by <a href="#b/blockchain.c:486" title="index.lit:487 /blockchain.c">1</a> </small></p></div>
+
+
 <p>The use of the first hash is obvious.
 To check whether some data is in our chain,
  take its hash, and try to find a header with that contents hash.
@@ -162,38 +178,19 @@ Given some small header information, one can verify whether a given record:</p>
 </ol>
 
 
-<h3>Code</h3>
-
-<p>Let&rsquo;s dig into some code.
-We need one dependency: <a href="src/sha-256.h">sha-256.h</a> and <a href="src/sha-256.c">sha-256.c</a>
-which provides the hash function <code>calc_sha_256</code>.</p>
-
-<p>Our header will follow the description above :</p>
-
-<div class="code-block">
-<span class="block-header">
-<strong class="block-title"><em><a id="bblock_header:150" href="#bblock_header:150">block header</a></em></strong></span>
-<pre class="prettyprint"><code class="">typedef struct
-{
-    /* Length of the data in the block */
-    uint32_t contents_length;
-    /* Hash of the block contents. */
-    /* 32 is the number of bytes in a sha256 hash */
-    uint8_t contents_hash[32];
-    uint8_t previous_hash[32];
-} block_header_t;
-</code></pre>
-<p class="block-usages"><small>Used by <a href="#bblockchain.c:500" title="index.lit:501 blockchain.c">1</a> </small></p></div>
-
+<h3>Adding blocks</h3>
 
 <p>Creating a block and adding it to the chain is straightforward.
 The arguments include a reference to a previous block header (or <code>NULL</code> for the initial &ldquo;genesis block&rdquo;),
 but not any of the previous contents.
 We simply hash the new contents and the previous block header and assign it to the new header.</p>
 
+<p>We need one dependency: <a href="src/sha-256.h">sha-256.h</a> and <a href="src/sha-256.c">sha-256.c</a>
+which provides the hash function <code>calc_sha_256</code>.</p>
+
 <div class="code-block">
 <span class="block-header">
-<strong class="block-title"><em><a id="bbuild_block:167" href="#bbuild_block:167">build block</a></em></strong></span>
+<strong class="block-title"><em><a id="bbuild_block:164" href="#bbuild_block:164">build block</a></em></strong></span>
 <pre class="prettyprint"><code class="">block_header_t build_block(const block_header_t* previous, const char* contents, uint64_t length)
 {
     block_header_t header;
@@ -212,13 +209,10 @@ We simply hash the new contents and the previous block header and assign it to t
     
     /* add data hash */
     calc_sha_256(header.contents_hash, contents, length);
-
-    /* mining. discussed later */
-    mine_block(&amp;header);
     return header;
 }
 </code></pre>
-<p class="block-usages"><small>Used by <a href="#bblockchain.c:500" title="index.lit:501 blockchain.c">1</a> </small></p></div>
+<p class="block-usages"><small>Used by <a href="#b/blockchain.c:486" title="index.lit:487 /blockchain.c">1</a> </small></p></div>
 
 
 
@@ -286,7 +280,7 @@ We just try as many as we can!</p>
 
 <div class="code-block">
 <span class="block-header">
-<strong class="block-title"><em><a id="bblock_header:255" href="#bblock_header:255">block header</a></em></strong> <a href="#bblock_header:150">:=</a></span>
+<strong class="block-title"><em><a id="bblock_header:249" href="#bblock_header:249">block header</a></em></strong> <a href="#bblock_header:110">:=</a></span>
 <pre class="prettyprint"><code class="">typedef struct
 {
     /* Length of the data in the block */
@@ -310,7 +304,7 @@ We just try as many as we can!</p>
 
 <div class="code-block">
 <span class="block-header">
-<strong class="block-title"><em><a id="bnonce_search:275" href="#bnonce_search:275">nonce search</a></em></strong></span>
+<strong class="block-title"><em><a id="bnonce_search:269" href="#bnonce_search:269">nonce search</a></em></strong></span>
 <pre class="prettyprint"><code class="">/* adjust the nonce until the block header is &lt; the target hash */
 uint8_t block_hash[32];
 
@@ -324,7 +318,7 @@ for (uint32_t i = 0; i &lt; UINT32_MAX; ++i)
         return;
 }
 </code></pre>
-<p class="block-usages"><small>Used by <a href="#bmining:300" title="index.lit:301 mining">1</a> </small></p></div>
+<p class="block-usages"><small>Used by <a href="#bmining:294" title="index.lit:295 mining">1</a> </small></p></div>
 
 
 <p>As you can imagine, this brute force operation of adjusting numbers, and hashing again can take a lot of CPU time!</p>
@@ -339,17 +333,15 @@ If all numbers have been tried, the timestamp is reset to the current time, and 
 
 <div class="code-block">
 <span class="block-header">
-<strong class="block-title"><em><a id="bmining:300" href="#bmining:300">mining</a></em></strong></span>
-<pre class="prettyprint"><code class="">void mine_block(block_header_t* header)
+<strong class="block-title"><em><a id="bmining:294" href="#bmining:294">mining</a></em></strong></span>
+<pre class="prettyprint"><code class="">void mine_block(block_header_t* header, const uint8_t* target)
 {
-    <em class="block-link nocode" title="index.lit:331"><a href="#btarget:330">@{target}</a></em>
-
     while (1)
     {
         /* MINING: start of the mining round */
         header-&gt;timestamp = (uint64_t)time(NULL); 
 
-        <em class="block-link nocode" title="index.lit:276"><a href="#bnonce_search:275">@{nonce search}</a></em>
+        <em class="block-link nocode" title="index.lit:270"><a href="#bnonce_search:269">@{nonce search}</a></em>
  
         /* The uint32 expired without finding a valid hash.
            Restart the time, and hope that this time + nonce combo works. */
@@ -359,7 +351,7 @@ If all numbers have been tried, the timestamp is reset to the current time, and 
     assert(0);
 }
 </code></pre>
-<p class="block-usages"><small>Used by <a href="#bblockchain.c:500" title="index.lit:501 blockchain.c">1</a> </small></p></div>
+<p class="block-usages"><small>Used by <a href="#b/blockchain.c:486" title="index.lit:487 /blockchain.c">1</a> </small></p></div>
 
 
 <h3>Target</h3>
@@ -371,26 +363,12 @@ as there are fewer hashes within the valid range.</p>
 
 <p>In our project, we will use a constant target.</p>
 
-<div class="code-block">
-<span class="block-header">
-<strong class="block-title"><em><a id="btarget:330" href="#btarget:330">target</a></em></strong></span>
-<pre class="prettyprint"><code class="">/* this controls the difficulty.
-   I chose this target because it works well on my computer.
-   Feel free to try out others. */
-
-uint8_t target[32];
-memset(target, 0, sizeof(target));
-target[2] = 0x0F;
-
-/* too hard?: try target[2] = 0xFF
-   too easy?: try target[2] = 0x01 */
-</code></pre>
-<p class="block-usages"><small>Used by <a href="#bmining:300" title="index.lit:301 mining">1</a> </small></p></div>
-
-
 <p>In Bitcoin, the target actually changes with each block.
 This allows bitcoin to adjust the <a href="https://en.bitcoin.it/wiki/Difficulty">mining difficulty</a>
 in order to regulate the speed of block production as computers get faster and faster.</p>
+
+<p><strong>Exercise:</strong> Describe a method of adjusting the target based on changing mining effort,
+that will e, in a manner which leads to</p>
 
 <h2>4. Objectivity<a id="s0:3"></a></h2>
 
@@ -446,8 +424,6 @@ is practically impossible.</p>
 <blockquote><p>&ldquo;Proof-of-work is essentially one-CPU-one-vote.
 The majority decision is represented by the longest chain, which has the greatest proof-of-work effort invested in it.&rdquo; - Satoshi Nakamoto</p></blockquote>
 
-<p><strong>Exercise:</strong></p>
-
 <p>Proof-of-work also makes it very difficult to tamper with old records or produce a fraudulent chain.
 To rewrite a block, you have to spend the CPU resources to do so.
 To go back two blocks requires double the amount of work, and so on.
@@ -464,27 +440,20 @@ It is certainly a clever system, with carefully structured incentives, but it ha
 <h2>5. Storing data<a id="s0:4"></a></h2>
 
 
-<p>As mentioned before, a blockchain can store any kind of data.
-The Bitcoin blockchain works just like a bank account.
-It stores a ledger of <a href="https://en.bitcoin.it/wiki/Transaction">financial transactions</a>
-each referencing previously deposited amounts and transfering them to new addresses.
-Bitcoin takes great care to ensure this data packs efficiently, to maximize usage
-of every block.</p>
+<p>The Bitcoin blockchain stores a ledger of <a href="https://en.bitcoin.it/wiki/Transaction">financial transactions</a>
+each referencing previously deposited amounts and transferring them to new addresses.
+A lot of the Bitcoin code is dedicated to the network protocol for accepting transactions, broadcasting them, and syncing the state of the chain
+across the internet.
+All of this is interesting stuff, but not necessary to understand proof of work.</p>
 
-<p>In this article, we won&rsquo;t worry too much about what goes in the block.
-We will specifically store blobs of text.</p>
+<p>To keep things simple, our blockchain will just run locally on a computer.
+However, we still want a real proof-of-work effect; that longer chains have more work spent on them.
+We will demonstrate this by taking lines from a text file, encoding each of them in blocks,
+and appending them onto a growing chain, as fast as possible.
+This isn&rsquo;t very useful, but it is still a good illustration of the constant production of blocks on the Bitcoin network.</p>
 
-<p>In the real Bitcoin network, miners are connected in a peer-to-peer network.
-They receive transactions from clients to include in blocks and share blocks they know about, cooperatively building a chain.</p>
-
-<p>Our tiny blockchain won&rsquo;t have any network or peers, and will just run locally on a computer.
-However, we still want to get a real proof-of-work effect;
-that longer chains have more work spent on them.
-So we need to pick a task that can run without user intervention.</p>
-
-<p>The task I chose is to take lines of text from a file and encode them in blocks, as fast as possible.
-This isn&rsquo;t very useful, but it is still a good illustrative example of the constant production of blocks on the Bitcoin network.
-Storing text in the chain actually follows Bitcoin tradition, where the <a href="https://en.bitcoin.it/wiki/Genesis_block">genesis block</a> includes this headline from a 2009 English newspaper:</p>
+<p>Storing text in blocks does follow Bitcoin tradition.
+The <a href="https://en.bitcoin.it/wiki/Genesis_block">genesis block</a> curiously includes this headline from a 2009 English newspaper:</p>
 
 <blockquote><p>&ldquo;The Times 03/Jan/2009 Chancellor on brink of second bailout for banks&rdquo;</p></blockquote>
 
@@ -492,52 +461,56 @@ Storing text in the chain actually follows Bitcoin tradition, where the <a href=
 
 <p>We will follow the tradition and include it for our genesis block.</p>
 
-<div class="code-block">
-<span class="block-header">
-<strong class="block-title"><em><a id="bgenesis_block:446" href="#bgenesis_block:446">genesis block</a></em></strong></span>
-<pre class="prettyprint"><code class="">printf("creating genesis block...\n");
-char genesis_data[] = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
-block_header_t genesis = build_block(NULL, genesis_data, sizeof(genesis_data));
-</code></pre>
-<p class="block-usages"><small>Used by <a href="#binput_loop:455" title="index.lit:456 input loop">1</a> </small></p></div>
-
+<p>opening and closing files is always a pain, so we will just follow UNIX fashion,
+and</p>
 
 <p>So we don&rsquo;t have to worry about finding files to read, the program will read text line by line from stdin and put each line in a block.
 The block headers will be written into a file as they are mined.</p>
 
 <div class="code-block">
 <span class="block-header">
-<strong class="block-title"><em><a id="binput_loop:455" href="#binput_loop:455">input loop</a></em></strong></span>
-<pre class="prettyprint"><code class=""><em class="block-link nocode" title="index.lit:447"><a href="#bgenesis_block:446">@{genesis block}</a></em>
+<strong class="block-title"><em><a id="binput_loop:429" href="#binput_loop:429">input loop</a></em></strong></span>
+<pre class="prettyprint"><code class="">int block_no = 0;
+block_header_t previous;
 
-int block_no = 0;
-block_header_t previous = genesis;
 while (!feof(stdin))
 {
-    /* hash the solved header. (only for display purposes) */
-    uint8_t test_hash[32];
-    calc_sha_256(test_hash, &amp;previous, sizeof(block_header_t));
-    printf("done. nonce: %i hash: ", previous.nonce);
-    fprint_hash(stdout, test_hash);
-    printf("\n");
-
-    /* dump header to a file */
-    fwrite(&amp;previous, sizeof(block_header_t), 1, output_file);
- 
     /* read data to put in the block */
     char line_buffer[LINE_MAX];
     fgets(line_buffer, LINE_MAX, stdin);  
-
-    printf("creating block %i: ", block_no);
-    printf("%s\n", line_buffer);
     uint64_t size = strnlen(line_buffer, LINE_MAX) + 1;
-    block_header_t header = build_block(&amp;previous, line_buffer, size);
-  
+
+
+    block_header_t* previous_ptr = block_no == 0 ? NULL : &amp;previous;
+    fprintf(stderr, "creating block %i: ", block_no);
+    fprintf(stderr, "%s\n", line_buffer);
+     
+    block_header_t header = build_block(previous_ptr, line_buffer, size);
+    mine_block(&amp;header, target);
     previous = header;
     ++block_no;
+
+    /* hash the solved header. (only for display purposes) */
+    printf("previous: ");
+    fprint_hash(stdout, previous.previous_hash);
+    printf("\n");
+
+    printf("contents: ");
+    fprint_hash(stdout, previous.contents_hash);
+    printf("\n");
+
+    printf("timestamp: %d\n", previous.timestamp);
+    printf("nonce: %d\n", previous.nonce);
+
+    uint8_t test_hash[32];
+    calc_sha_256(test_hash, &amp;previous, sizeof(block_header_t));
+    printf("hash: ");
+    fprint_hash(stdout, test_hash);
+    printf("\n\n\n");
+
 }
 </code></pre>
-<p class="block-usages"><small>Used by <a href="#bblockchain.c:500" title="index.lit:501 blockchain.c">1</a> </small></p></div>
+<p class="block-usages"><small>Used by <a href="#b/blockchain.c:486" title="index.lit:487 /blockchain.c">1</a> </small></p></div>
 
 
 
@@ -550,7 +523,7 @@ These are not relevant to understanding the actual blockchain.</p>
 
 <div class="code-block">
 <span class="block-header">
-<strong class="block-title"><em><a id="bprint_hashes:491" href="#bprint_hashes:491">print hashes</a></em></strong></span>
+<strong class="block-title"><em><a id="bprint_hashes:477" href="#bprint_hashes:477">print hashes</a></em></strong></span>
 <pre class="prettyprint"><code class="">void fprint_hash(FILE* f, uint8_t* hash)
 {
     fprintf(f, "0x");
@@ -558,14 +531,14 @@ These are not relevant to understanding the actual blockchain.</p>
         fprintf(f, "%02x", hash[i]);
 }
 </code></pre>
-<p class="block-usages"><small>Used by <a href="#bblockchain.c:500" title="index.lit:501 blockchain.c">1</a> </small></p></div>
+<p class="block-usages"><small>Used by <a href="#b/blockchain.c:486" title="index.lit:487 /blockchain.c">1</a> </small></p></div>
 
 
 
 
 <div class="code-block">
 <span class="block-header">
-<strong class="block-title"><em><a id="bblockchain.c:500" href="#bblockchain.c:500">blockchain.c</a></em></strong></span>
+<strong class="block-title"><em><a id="b/blockchain.c:486" href="#b/blockchain.c:486">/blockchain.c</a></em></strong></span>
 <pre class="prettyprint"><code class="">#include &lt;stdio.h&gt;
 #include &lt;stdlib.h&gt;
 #include &lt;stdint.h&gt;
@@ -578,18 +551,26 @@ These are not relevant to understanding the actual blockchain.</p>
 
 #define LINE_MAX 4096
 
-<em class="block-link nocode" title="index.lit:492"><a href="#bprint_hashes:491">@{print hashes}</a></em>
-<em class="block-link nocode" title="index.lit:151"><a href="#bblock_header:150">@{block header}</a></em>
-<em class="block-link nocode" title="index.lit:301"><a href="#bmining:300">@{mining}</a></em>
-<em class="block-link nocode" title="index.lit:168"><a href="#bbuild_block:167">@{build block}</a></em>
+<em class="block-link nocode" title="index.lit:478"><a href="#bprint_hashes:477">@{print hashes}</a></em>
+<em class="block-link nocode" title="index.lit:111"><a href="#bblock_header:110">@{block header}</a></em>
+<em class="block-link nocode" title="index.lit:295"><a href="#bmining:294">@{mining}</a></em>
+<em class="block-link nocode" title="index.lit:165"><a href="#bbuild_block:164">@{build block}</a></em>
+
+/* this controls the difficulty.
+   I chose this target because it works well on my computer.
+   Feel free to try out others. */
+
+uint8_t target[32];
 
 int main(int argc, const char* argv[])
 {
-    FILE* output_file = fopen("chain.bin", "wb");
+    memset(target, 0, sizeof(target));
 
-    <em class="block-link nocode" title="index.lit:456"><a href="#binput_loop:455">@{input loop}</a></em>
+    /* too hard?: try target[2] = 0xFF
+       too easy?: try target[2] = 0x01 */
+    target[2] = 0x0F;
 
-    fclose(output_file);
+    <em class="block-link nocode" title="index.lit:430"><a href="#binput_loop:429">@{input loop}</a></em>
     return 1;
 }
 </code></pre>
@@ -612,7 +593,7 @@ done. nonce: 427455 hash: 0x000003e9ea9bb66eae1b34a4a1b482f3fcf0ee1ca0589ae16de8
 creating block 0: The Project Gutenberg EBook of Gorgias, by Plato
 </code></pre>
 
-<p>If the program produces blocks too slowly, or quickly, adjust the <em class="block-link nocode" title="index.lit:331"><a href="#btarget:330">target</a></em> variable.</p>
+<p>If the program produces blocks too slowly, or quickly, adjust the  variable.</p>
 
 <h2>8. Further study<a id="s0:7"></a></h2>
 

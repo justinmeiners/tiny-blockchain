@@ -4,52 +4,78 @@ By: [**Justin Meiners**](https://github.com/justinmeiners).
 
 View the final code and other resources in the [GitHub repo](https://github.com/justinmeiners/tiny-blockchain).
 
-### Contents
+Proof-of-work is the key innovation behind [Bitcoin](research/bitcoin.pdf) that allows the history of a piece of information to be recorded
+and verified in an "objective way".
+Embedded in the structure of a proof-of-work chain is evidence that a certain amount of computing power was consumed to produce it.
+This allows anyone to verify its authenticity by examining the chain itself without requiring trust of third parties.
+
+This article will introduce proof-of-work algorithms by writing a tiny blockchain 
+in C closely following the [Bitcoin implementation](https://github.com/bitcoin/bitcoin).
+It is intended to teach programmers who are curious to learn about cryptocurrency.
+Cryptocurrency enthusiasts will be familiar with most of the material, but can benefit by seeing it work
+in detail.
 
 @toc
 
-## Introduction
-
-This article will teach you how to write a tiny proof-of-work blockchain, focusing on the Bitcoin implementation.
-I emphasize "proof-of-work" because as we shall see, this is the key innovation that allows Bitcoin to store information in an "objectively" verifiable way.
-I wrote this mainly for programmers who are curious about how cryptocurrency works.
-If you're already an enthusiast, you've probably read articles on this topic before.
-I hope to bring a valuable perspective by focusing on the essentials.
-
-This project will be written in C, although it is easy to translate to other languages.
-To start, create a new `.c` file to place code in.
-You will also need to include [sha-256.h](src/sha-256.h) and [sha-256.c](src/sha-256.c) for hashes (or use your language's library).
-
-> **Note:** This is a [literate program](https://en.wikipedia.org/wiki/Literate_programming).
+> **Note:** This tutorial is a [literate program](https://en.wikipedia.org/wiki/Literate_programming).
 > This means you are reading the source code right now!
 > The final output was created by ["weaving"](https://github.com/zyedidia/Literate) the blocks of code together.
 
-## Hash review
+## Hash functions
 
-You are probably familiar with [hashes](https://en.wikipedia.org/wiki/Cryptographic_hash_function), but just to review, a hash is a function which maps a piece of data of any length to a short checksum.
-The essential property of a hash is that it's *one way*.
-It's *easy* to calculate the output for an input, *impossible* to know what input produced a given output, and *very difficult* to find an alternative piece of data that produces the same output.
+A **[hash function](https://en.wikipedia.org/wiki/Hash_function)** `h` is a mathematical function sending data of any length to data of a fixed length.
+We often refer to the output data `h(x)` as a *hash* or *checksum* of the data `x`.
+For example, Bitcoin uses the [sha256](https://en.wikipedia.org/wiki/SHA-2)
+function which sends any binary data to a 256 bit hash.
 
 ![hash function](img/hash.png)
 
-To verify a piece of data, hash it and compare it with a trusted hash.
-Since it's extremely unlikely that different data hashes the same, if they match, we have good reason to believe that the data is valid.
+By definition hash functions cannot be one-to-one. 
+There will be many inputs which produce the same output just because
+there fewer outputs available and some [must double up](https://en.wikipedia.org/wiki/Pigeonhole_principle).
+Consequently, if we are given a hash `y`, it's impossible to know exactly what input `x` it came from.
+The best we could do is describe the collection of all inputs giving a particular output: `{ x | h(x) = y }`.
 
-For example, a newspaper could publish the hash of each paper it distributes, and anyone could use that hash to verify whether a given paper was genuine.
-Ubuntu Linux publishes the hash of each release, allowing you to know you downloaded the real thing and not a virus.
-(Of course, you still have to trust that the hash you got is the right one.)
+In the context of cryptography, we are particularly interested
+in  [*one way* hashes](https://en.wikipedia.org/wiki/Cryptographic_hash_function).
+These are hashes for which it is *easy* to calculate the output `h(x)` for a given input `x`
+and *very difficult* to find an alternative piece of data that produces the same output.
+In other words, we don't want to be able to easily find a `z /= x` where `h(z) = h(x)`.
 
-To check your knowledge of hashes, here are some questions to consider:
+**Exericse:** Give an example of a hash function (does not need to be cryptographic).
 
-- Must every possible hash be mapped to?
-- Could there be a hash that only one thing maps to? In other words, only a single input could produce it?
-- Why is there at least one hash that infinitely many things map to?
+**Exercise:** Must a hash function map to every output multiple times?
 
-## What is a blockchain?
+**Exercise:** Learn about a hash function which was previously considered cryptographically secure which is no longer.
 
-Hash checksums are helpful for verifying the *state* of data at a fixed snapshot in time.
-But sometimes, we want to ensure the *history* of some data over time.
-Two pieces of data which are the same now might not be equivalent if two different paths were taken to get there.
+### Verification
+
+Cryptographic hashes are very useful for verifying data, because
+they are small, but also contain information about the full data.
+Suppose a friend recommends you a new computer program.
+How can you get the program, and ensure it's what he recommended and not a virus?
+
+If your friend sent you the program himself, you could *trust him* directly.
+Assuming that's not convenient,  he may have directed to a specific site to download it from, instead.
+In this case he *trusts a third party* to provide you the correct file.
+
+Alternatively, your friend could compute a hash of the file and send you that, since it would be much smaller than the full program.
+You could then compute the hash of the file you downloaded, and then check if they match.
+If they do, it's extremely likely that the program is authentic.
+The alternative is that the provider crafted a different file that also hash the same hash,
+which cryptographic hash functions make very hard to do.
+
+This is exactly what makes [BitTorrent](https://en.wikipedia.org/wiki/BitTorrent) work.
+If you download something like Ubuntu Linux you first obtain a hash from the team of trusted developers.
+You can then safely download the data from anywhere else on the internet (assuming that hash was correct).
+
+## Hashing histories 
+
+Hashes are helpful for recording and verifying the *state* of data at a fixed snapshot in time.
+But sometimes, we want to record and verify the *history* of some data over time.
+Two pieces of data may look the same now, but might not be equivalent 
+if two different paths were taken to get there.
+In physics and math, this property is called [path dependence](https://en.wikipedia.org/wiki/Nonholonomic_system):
 
 ![path dependence](img/path-dependence.png)
 
@@ -57,81 +83,86 @@ A bank account is one such example.
 We not only care about the final balance, but the full history of each deposit and withdrawal.
 Did our bills get paid?
 Has someone been withdrawing money from our account?
-Historical integrity is starting to sound pretty important!
-Note that a hash of a bank statement is worthless, even if it includes the full record of transactions.
-As soon as a new transaction occurs, the state completely changes.
-Someone could just as easily tamper with past transactions, and the hash couldn't tell you.
+Path dependence is starting to sound pretty important!
 
-A blockchain allows one to verify these kinds of histories.
-In physics and math, this property is called [path dependence](https://en.wikipedia.org/wiki/Nonholonomic_system), which leads us to a very philosophical definition:
-a blockchain is a tool for verifying the integrity of path-dependent systems.
-Just kidding! 
-That's not very helpful. How about this:
+Recording hashes of a bank balance would not be very useful for verifying it's authenticity.
+Whenenver the balance changes the hash would also change, whether due to authentic
+transactions or manipulation.
+What would be more useful is to record and hash the history of transactions over a period of time.
+Then in future bank statements you could check those ranges against the hash.
 
-A blockchain is a data structure for storing an ordered sequence of records (**blocks**) in a tamper-resistant way.
-Given some small header information, one can verify whether a given record:
+This scheme works pretty well for bank accounts, but it's a bit harder to generalize to other kinds of data.
+For example, we can't always organize the full data neatly into a time window. 
+What we need is to generalize these ideas,
+leading to the concept of a blockchain.
 
-1. has been modified
-2. belongs in the sequence
-3. is in the correct order, relative to the other records
+### Blockchains
 
+A **blockchain** is an ordered sequence of records called **blocks**.
 Each block is made up of a **header** and **contents**.
-The **contents** are just arbitrary data to be stored in the chain.
-The **header** contains some info about the block and two hashes:
+The **contents** is arbitary data to be stored in the chain.
+The **header** contains some metadata about the block, along with two hashes:
 
 1. The hash of the contents.
 
-2. The hash of the previous block header.
-   Including this ensures that anyone with the header can also check that *no preceding* block has changed.
+2. The hash of the previous block header (or 0 if there is none).
+
+
+The use of the first hash is obvious. 
+To check whether some data is in our chain,
+ take its hash, and try to find a header with that contents hash.
+The headers tend to be much smaller than the blocks, so sharing headers isn't a burden.
+
+But, the second hash is the really intersting part. 
+It hashes the previous header, and since the previous does similarly,
+in a weird way it is a hash of all the blocks in the chain so far.
+This can be used to ensure no additional blocks can be inserted, or removed, and no history is modified.
+
+![blockchain](img/blockchain.gif)
+
+Another way to see this "domino" effect is by thinking of the blockchain as a recursive definition.
+Let `H_i` be the hash of the `i`th block header and `C_i` be the hash of it's contents. 
+Then `H_n` is defined in the following way:
+
+    H_1 = h(0 + C_1))
+    H_n = h(H_{n-1} + C_n)
+
+If we expand, this definition for a specific case like `H_4`, we see it includes the conents hash of all previous blocks:
+
+    H_4 = h(h(h(h(0 + C_1) + C_2) + C_3) C_4)
+
+
+Essentially a blockchain is a linked list, but with additional cryptographic information,
+that makes the chain, and it's contents, tamper resistant.
+Given some small header information, one can verify whether a given record:
+
+1. Belongs in the sequence.
+2. Is in the correct order, relative to the other records.
+
+### Code
+
+Let's dig into some code.
+We need one dependency: [sha-256.h](src/sha-256.h) and [sha-256.c](src/sha-256.c)
+which provides the hash function `calc_sha_256`.
+
+Our header will follow the description above : 
 
 --- block header
 typedef struct
 {
     /* Length of the data in the block */
     uint32_t contents_length;
-    /* Hash of the block contents.
-       Prevents contents from changing
-       (in Bitcoin this would actually be the "merkle root" */
+    /* Hash of the block contents. */
+    /* 32 is the number of bytes in a sha256 hash */
     uint8_t contents_hash[32];
-    /* prevents previous data from changing */
     uint8_t previous_hash[32];
-
-    @{proof-of-work entries}
 } block_header_t;
-
 ---
 
-(`32` is the number of bytes in a `sha256` hash.)
-
-The headers thus form a chain by linking each header to the previous.
-
-![blockchain](img/blockchain.gif)
-
-Applying this to the bank account example, each day's transactions could be stored in a block.
-Given the last header in the chain (such as a bank statement), new transactions could be safely added in new blocks, but any changes to previous blocks would be detected.
-Because each header references the previous block, and that previous block references the one *before it*, changes propagate like dominos knocking each other over.
-
-The domino effect can also be seen in the expanded equation for the hash of the last block where `h` is a hash function and `C(i)` is the contents of the `i`th block.
-See how it includes the contents of each preceding block?
-
-    h(h(h(... + C(n-2)) + C(n-1)) + C(n))
-
-If you use Git version control, you are already familiar with this!
-Each commit is a hash of the state of the code and the hash of the previous commit.
-If you change an old commit, all future commits must also change.
-Just like the bank account example, the history of the code matters just as much as the state.
-Differing histories result in different commit hashes.
-
-## Creating blocks
-
-The Bitcoin blockchain works just like a bank account.
-It stores a ledger of [financial transactions](https://en.bitcoin.it/wiki/Transaction).
-But, blockchains can store any kind of data.
-In this project, we will be storing blobs of text.
-
-Creating a block and adding it to the chain is very straightforward.
-The block also needs a reference to a previous block header (or `NULL` for the genesis block.)
-We simply hash the contents and the previous block header and assign it to the new header.
+Creating a block and adding it to the chain is straightforward.
+The arguments include a reference to a previous block header (or `NULL` for the initial "genesis block"),
+but not any of the previous contents.
+We simply hash the new contents and the previous block header and assign it to the new header.
 
 --- build block
 block_header_t build_block(const block_header_t* previous, const char* contents, uint64_t length)
@@ -153,114 +184,93 @@ block_header_t build_block(const block_header_t* previous, const char* contents,
     /* add data hash */
     calc_sha_256(header.contents_hash, contents, length);
 
-    /* mining. disucssed later */
+    /* mining. discussed later */
     mine_block(&header);
     return header;
 }
 ---
 
-## What is proof-of-work?
 
-Blockchains don't automatically make a record trustworthy.
-To verify a block, you must obtain the headers from a trusted party, whether it's yourself or your bank.
-A malicious person could give you fake headers in a completely valid chain, and you would have no way to tell they weren't *genuine*.
-They could also add new headers to a blockchain you trust, and the new ones would look just as valid as the old ones!
-In most cases, if you trust someone enough to give you blockchain headers, you also trust them to just give you the data.
+## Proof-of-work
 
-So, blockchains can be useful record-keeping tools among trusted groups, but it's not clear at this point how they can keep any kind of contested record.
+The headers of a blockchain allow you to verify that any contents of the chain are valid, even if you don't have them.
+And, the headers tend to be a lot smaller than the original data,
+so you don't need to store much to get that ability.
+So that's all really cool, but this is still a long ways away from being able to perform financial transactions securely.
+
+The main problem, is how to get the valid headers in the first place.
+Some financial transactions can be stored in a valid blockchain, but how do you know those transacations are correct?
+A malicious person could modify some contents, update the chain, and you would have no way to tell they weren't *genuine*.
+At some point, you need to obtain headers from a trusted party.
+At that point, why can't you just trust the third party to give you the data as well?
+
+So, blockchains don't automatically make a record trustworthy, but they can be useful record-keeping tools among trusted parties.
+The [Git](https://git-scm.com/) version control system appeared before Bitcoin, and uses a blockchain just like this!
+It stores each change to a set of files in a block called a commmit.
+The commit includes a hash of the state of the files combined with the hash of the previous commit.
+If the contents of an old commit are modified, all future commits must also change.
+But, at the end of the day, you Git repositories are shared between trusted parties.
+
+### Mining
+
 The challenge posed by Bitcoin is to store a record of financial transactions that complete strangers can agree on.
-Internet money shouldn't require entrusting funds to another person.
+Internet money shouldn't require entrusting funds to another person!
+What it needs is a simple rule that anyone can use to "objectively" determine whether a given blockchain is the "right" one.
 This is the problem solved by **proof-of-work**. 
-It provides a simple rule that anyone can use to "objectively" determine whether a given blockchain is the "right" one.
 
-Instead of allowing blocks to be created freely, proof-of-work requires that CPU resources be spent on a time-consuming problem first.
-This process is called **mining**.
-Proof that CPU resources were spent is included in the block itself, allowing anyone to verify that work was actually done.
+Instead of allowing blockchains to be created freely, proof-of-work requires that computing resources be spent on a time-consuming problem 
+for each block of the chain, in a process calleed **mining**.
+To **mine** a block, a computer is given a difficult search problem, to find an answer for.
+It searches, and searches, using compute power, and after some time hopefully finds an answer.
+This answer is then included in the block itself providing verifiable proof to everyone, that the work was done.
 Hence the term "proof-of-work."
 
-Mining limits the rate at which blocks can be produced to the speed of CPUs.
-In the Bitcoin network, computers across the world are constantly racing to be the first to solve a problem so they can produce a block.
-The difficulty of the mining problems ensures that it will take a certain amount of time before anyone can produce a block, adding an additional property:
-*longer chains have had more CPU resources spent making them.*
+#### Nonce
 
-This is what makes the chain verifiable.
-The valid Bitcoin chain is always *the one that is the longest* because it is the one that has had the most mining effort spent on it.
 
-> "Proof-of-work is essentially one-CPU-one-vote.
-> The majority decision is represented by the longest chain, which has the greatest proof-of-work effort invested in it." - Satoshi Nakamoto
+Turning a regular old blockchain into a proof-of-work blockchain is suprisingly easy.
+We just need one additional rule for a chain to be valid.
+We require the *hash of any block header must to be less than some **target** hash*.
+By "less than" we mean the usual [byte by byte](https://en.cppreference.com/w/c/string/byte/memcmp) lexicographic comparison
+(for example `0000 0001 < 0000 0010`).
 
-Proof-of-work also makes it very difficult to tamper with old records or produce a fraudulent chain.
-To rewrite a block, you have to spend the CPU resources to do so.
-To go back two blocks requires double the amount of work, and so on.
-Meanwhile, the original chain is constantly being extended by CPUs across the globe.
-So not only would an attacker have to redo all the work that has been done, but it would have to do it faster than the rest of the Bitcoin network creates new blocks.
+From what we have discussed so far, this is a strange requirement. 
+Hashes don't have any ordering requirements and the hashes
+are entirely determined by the contents and the chain.
+So what does this do?
 
-I put the words "objectively" and "right" in quotes because you now know they are a bit dubious.
-The "right" chain is defined by the consensus of CPU power.
-A group or individual who wields a lot of CPU power can change the consensus.
-The right blockchain is the one that the most mining power has been put into.
-The only objective thing we can determine is if one chain has had more CPU resources spent on it than another.
-It is certainly a clever system, with carefully structured incentives, but it has limitations.
+First, let's add a mechanism so that the hash of a header can be changed, without hurting he actual data.
+One way to do this is to add a number called a **nonce** to the block header.
+If we don't like the header's hash, we can change it, simply by changing the nonce.
 
-> "Bitcoin can thus be understood as a technology that converts electricity to truthful records through the expenditure of processing power." - Safedean Ammous.
-
-## Mining
-
-To add proof-of-work, we add an additional requirement to the chain, which is that the hash of any block header must be less than some **target** hash.
-In other words `h(header) < T`.
-By "less than" we mean the usual [byte by byte](https://en.cppreference.com/w/c/string/byte/memcmp) lexicographic comparison, like alphabetical order.
-(For example `0000 0001` is less than `0000 0010`)
-That's all we need. A block header is valid if it is within the range, and invalid otherwise.
-Finding a hash that fits this requirement is the time-consuming problem that requires CPU resources.
-
-### Target
-
-The target `T` can be any hash. However, the smaller (in ordering) it is, the more difficult it is to find a valid hash due to the lower number of hashes within the valid range.
-
-The target may be different for each block.
-This allows Bitcoin to adjust [mining difficulty](https://en.bitcoin.it/wiki/Difficulty) to adapt to improving CPUs.
-In our project, we will use a constant target.
-
---- target
-/* this controls the difficulty.
-   I chose this target because it works well on my computer.
-   Feel free to try out others. */
-
-uint8_t target[32];
-memset(target, 0, sizeof(target));
-target[2] = 0x0F;
-
-/* too hard?: try target[2] = 0xFF
-   too easy?: try target[2] = 0x01 */
----
-
-### Nonce
-
-Right now, the header is immutable.
-It contains only the contents hash and the previous block hash, both of which have already been determined and can't be changed.
-So to get the header hash below the target, we need to add a few additional fields to the headers.
-These are called the **nonce** and **timestamp**.
-
-Add the following to the `block_header_t` struct from before.
-
---- proof-of-work entries
-/* when this block started being mined */
-uint32_t timestamp; 
-
-/* nonce.
-   this is adjusted by the miner,
-   until a suitable hash is found */
-uint32_t nonce;
----
-
-To make a block header valid, the nonce is adjusted until the header's hash is in the valid range.
-Searching for a hash can take some time depending on the difficulty.
+In order to satisfy our new proof-of-work requirement we specifically want as hash below the target range.
+So, we just keep trying nonces, changing the hash, until we get one in the target range.
+to try to get the hash into the target range.
+Searching for a valid nonce can take some time and is the "difficult search problem" we described above.
 There is no rhyme or reason to guessing the nonce.
-The miner just tries as many as it can!
+We just try as many as we can!
 
-Let's write a loop that tests numbers in order:
+Let's redefine our header, and add a `timestamp` and `nonce`.
 
-(It will be placed in a mining function below.)
+--- block header :=
+typedef struct
+{
+    /* Length of the data in the block */
+    uint32_t contents_length;
+    /* Hash of the block contents. */
+    /* 32 is the number of bytes in a sha256 hash */
+    uint8_t contents_hash[32];
+    uint8_t previous_hash[32];
+
+    /* when this block started being mined */
+    uint32_t timestamp; 
+
+    /* This is adjusted to make the hash of this header fall in the valid range. */
+    uint32_t nonce;
+} block_header_t;
+---
+
+Then let's write a loop that tests numbers in order, until we find a valid hash:
 
 --- nonce search
 /* adjust the nonce until the block header is < the target hash */
@@ -283,9 +293,9 @@ As you can imagine, this brute force operation of adjusting numbers, and hashing
 
 It's possible that the miner tries all the numbers that can be stored in a `uint32` (up to `4294967295`) and never finds a valid hash.
 This is what the **timestamp** field is for.
-If all numbers have been tried, the timestamp is reset, and the process starts again.
+If all numbers have been tried, the timestamp is reset to the current time, and the process starts again.
 
-Here is the complete mining function:
+Here is the complete mining function with time reset:
 
 --- mining
 void mine_block(block_header_t* header)
@@ -308,7 +318,112 @@ void mine_block(block_header_t* header)
 }
 ---
 
-@s What will we store in the blockchain?
+### Target
+
+We haven't talked about how the target hash is chosen. 
+Any hash can be used.
+ However, the smaller (in ordering) it is, the more difficult it is to find a valid hash,
+as there are fewer hashes within the valid range.
+
+In our project, we will use a constant target.
+
+--- target
+/* this controls the difficulty.
+   I chose this target because it works well on my computer.
+   Feel free to try out others. */
+
+uint8_t target[32];
+memset(target, 0, sizeof(target));
+target[2] = 0x0F;
+
+/* too hard?: try target[2] = 0xFF
+   too easy?: try target[2] = 0x01 */
+---
+
+In Bitcoin, the target actually changes with each block.
+This allows bitcoin to adjust the [mining difficulty](https://en.bitcoin.it/wiki/Difficulty)
+in order to regulate the speed of block production as computers get faster and faster.
+
+## Objectivity
+
+Let's review what mining does for us.
+First, it allows us to control the rate at which valid blocks can be produced.
+Computers can only search for nonces so fast, and by adjusting the target, we can get a pretty
+good limit on the rate of production.
+
+In the context of Bitcoin, we want to make a ledge of transactions which can be shared by people around the internet.
+We need to set a hard cap on the rate that transactions are produced, in order to allow
+data to be sent across the interent, and everyone to stay in sync.
+
+More importantly, mining gives us an objective way to verify whether a chain is valid.
+Note that the hash being in a valid range is mathematical property, that can't be faked.
+If we find a header that has such a hash, we know it was either a very lucky
+or computing resources were spent in order to find a nonce to make it valid.
+We can determine this objectively, by looking at the chain itself.
+Furthmore, *longer chains have had more computing resources spent making them.*
+
+In the Bitcoin network computers across the world are constantly racing to be the first to find a valid hash, and mine a new block.
+They receive a financial reward for producing the next valid block (hence the mining analogy).
+Since this has been going non-stop since it's initial launch in 2009, the Bitcoin blockchain has had *a lot* of computing resources spent on it.
+To create a valid chain just as long, with as much proof of work, would require redoing all that computing work.
+This is what makes the chain verifiable.
+The valid Bitcoin chain is always *the one that is the longest* because it is the one that has had the most mining effort spent on it.
+
+> "Bitcoin can thus be understood as a technology that converts electricity to truthful records through the expenditure of processing power." - Safedean Ammous.
+
+### Voting
+
+At any snapshot in time, determining the longest chain is slightly more complicated then this.
+New blocks are regularly being mined, and it's possible that two ore more valid blocks
+are created at around the same time. 
+At this point the chain forks, and we have two equally long chains to choose from.
+
+![fork](img/fork.png)
+
+However, as soon as a new block is added, miners are already rushing to create the next one.
+They have to decide which of these paths to start working one, as the valid nonce will only work for one of them.
+At this time, the pick one, and by doing so, they essentially vote on which path is the future.
+Miners are incentivized to come to consensues quickly, as they need their work to be included in the valid chain,
+in order to spend their rewards.
+
+Overtime, brief forks occur, but quickly resolve and short [orphans](https://en.bitcoin.it/wiki/Orphan_Block)
+are abandoned.
+In practice, only the very latest blocks face this contention and potential to be rejected.
+Blocks included much earlier have so much proof-of-work on top of them, that changing them
+is practically impossible.
+
+![chain reorganization](img/reorg.png)
+
+> "Proof-of-work is essentially one-CPU-one-vote.
+> The majority decision is represented by the longest chain, which has the greatest proof-of-work effort invested in it." - Satoshi Nakamoto
+
+**Exercise:** 
+
+
+Proof-of-work also makes it very difficult to tamper with old records or produce a fraudulent chain.
+To rewrite a block, you have to spend the CPU resources to do so.
+To go back two blocks requires double the amount of work, and so on.
+Meanwhile, the original chain is constantly being extended by CPUs across the globe.
+So not only would an attacker have to redo all the work that has been done, but it would have to do it faster than the rest of the Bitcoin network creates new blocks.
+
+I put the words "objectively" and "right" in quotes because you now know they are a bit dubious.
+The "right" chain is defined by the consensus of CPU power.
+A group or individual who wields a lot of CPU power can change the consensus.
+The right blockchain is the one that the most mining power has been put into.
+The only objective thing we can determine is if one chain has had more CPU resources spent on it than another.
+It is certainly a clever system, with carefully structured incentives, but it has limitations.
+
+## Storing data
+
+As mentioned before, a blockchain can store any kind of data.
+The Bitcoin blockchain works just like a bank account.
+It stores a ledger of [financial transactions](https://en.bitcoin.it/wiki/Transaction)
+each referencing previously deposited amounts and transfering them to new addresses.
+Bitcoin takes great care to ensure this data packs efficiently, to maximize usage
+of every block.
+
+In this article, we won't worry too much about what goes in the block.
+We will specifically store blobs of text.
 
 In the real Bitcoin network, miners are connected in a peer-to-peer network.
 They receive transactions from clients to include in blocks and share blocks they know about, cooperatively building a chain.
@@ -431,7 +546,7 @@ If the program produces blocks too slowly, or quickly, adjust the @{target} vari
 ## Further study
 
 We have only just scratched the surface, and there is much more to learn from Bitcoin.
-You will certainly want to read the [original whitepaper](research/bitcoin.pdf).
+You will certainly want to read the original whitepaper.
 Here are a few topics to get you started.
 
 ### Merkle trees
@@ -458,7 +573,6 @@ Is it even [possible](https://hackernoon.com/asic-resistance-is-nothing-but-a-bl
 
 ### Chain reorginization
 
-![chain reorganization](img/reorg.png)
 
 (Image thanks to [Nakamoto Institute](https://nakamotoinstitute.org/about/))
 
@@ -466,7 +580,7 @@ As I mentioned, Bitcoin miners create and share blocks in a peer-to-peer network
 A lot must happen to ensure peers stay connected and that new blocks are spread throughout the network.
 Due to network delays, several alternative tails may form and start competing to be the longest.
 The nodes will follow a few of these until a clear winner arises.
-See [Orphan Blocks](https://en.bitcoin.it/wiki/Orphan_Block).
+See .
 
 A [major debate](https://en.bitcoin.it/wiki/Block_size_limit_controversy) in the Bitcoin community occurred over the block size and resulted in the fork of Bitcoin Cash.
 Large blocks can store more transactions, and hence increase the speed of the chain, but they also take longer to propagate around the internet.

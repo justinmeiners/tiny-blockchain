@@ -16,12 +16,10 @@ void fprint_hash(FILE* f, uint8_t* hash)
     for (int i = 0; i < 32; ++i)
         fprintf(f, "%02x", hash[i]);
 }
+
 typedef struct
 {
-    /* Length of the data in the block */
     uint32_t contents_length;
-    /* Hash of the block contents. */
-    /* 32 is the number of bytes in a sha256 hash */
     uint8_t contents_hash[32];
     uint8_t previous_hash[32];
 
@@ -31,6 +29,7 @@ typedef struct
     /* This is adjusted to make the hash of this header fall in the valid range. */
     uint32_t nonce;
 } block_header_t;
+
 void mine_block(block_header_t* header, const uint8_t* target)
 {
     while (1)
@@ -58,6 +57,7 @@ void mine_block(block_header_t* header, const uint8_t* target)
     /* this should never happen */
     assert(0);
 }
+
 block_header_t build_block(const block_header_t* previous, const char* contents, uint64_t length)
 {
     block_header_t header;
@@ -93,17 +93,14 @@ int main(int argc, const char* argv[])
        too easy?: try target[2] = 0x01 */
     target[2] = 0x0F;
 
-    
     int block_no = 0;
     block_header_t previous;
     
     while (!feof(stdin))
     {
-        /* read data to put in the block */
         char line_buffer[LINE_MAX];
         fgets(line_buffer, LINE_MAX, stdin);  
         uint64_t size = strnlen(line_buffer, LINE_MAX) + 1;
-    
     
         block_header_t* previous_ptr = block_no == 0 ? NULL : &previous;
         fprintf(stderr, "creating block %i: ", block_no);

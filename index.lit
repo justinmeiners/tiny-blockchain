@@ -537,7 +537,7 @@ follow the references or refer to the [final code](src/blockchain.c)
 
 ### Running
 
-I have provided [Plato's Gorgias](docs/data/gorgias.txt) as a large sample text to store in our blockchain.
+I have provided [Plato's Gorgias](data/gorgias.txt) as a large sample text to store in our blockchain.
 Go ahead and download it.
 Run the program by inputting the file to `stdin`.
 

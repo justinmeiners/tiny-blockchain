@@ -136,7 +136,7 @@ The <strong>header</strong> contains some metadata about the block, along with t
 
 <div class="code-block">
 <span class="block-header">
-<strong class="block-title"><em><a id="bblock_header:117" href="#bblock_header:117">block header</a></em></strong></span>
+<strong class="block-title"><em><a id="block-header-block-1" href="#block-header-block-1">block header</a></em></strong></span>
 <pre class="prettyprint"><code class="">typedef struct
 {
     /* Length of the data in the block */
@@ -147,7 +147,7 @@ The <strong>header</strong> contains some metadata about the block, along with t
     uint8_t previous_hash[32];
 } block_header_t;
 </code></pre>
-<p class="block-usages"><small>Used by <a href="#b/blockchain.c:494" title="index.lit:495 /blockchain.c">1</a> </small></p></div>
+<p class="block-usages"><small>Used by <a href="#-blockchain.c-block-15" title="/blockchain.c">1</a> </small></p></div>
 
 
 <p>The use of the first hash is obvious.
@@ -194,7 +194,7 @@ We simply hash the new contents and the previous block header and assign it to t
 
 <div class="code-block">
 <span class="block-header">
-<strong class="block-title"><em><a id="bbuild_block:168" href="#bbuild_block:168">build block</a></em></strong></span>
+<strong class="block-title"><em><a id="build-block-block-3" href="#build-block-block-3">build block</a></em></strong></span>
 <pre class="prettyprint"><code class="">block_header_t build_block(const block_header_t* previous, const char* contents, uint64_t length)
 {
     block_header_t header;
@@ -216,7 +216,7 @@ We simply hash the new contents and the previous block header and assign it to t
     return header;
 }
 </code></pre>
-<p class="block-usages"><small>Used by <a href="#b/blockchain.c:494" title="index.lit:495 /blockchain.c">1</a> </small></p></div>
+<p class="block-usages"><small>Used by <a href="#-blockchain.c-block-15" title="/blockchain.c">1</a> </small></p></div>
 
 
 <p>The function <code>calc_sha_256</code> comes from a dependency: <a href="src/sha-256.h">sha-256.h</a> and <a href="src/sha-256.c">sha-256.c</a>
@@ -293,7 +293,7 @@ We just try as many as we can!</p>
 
 <div class="code-block">
 <span class="block-header">
-<strong class="block-title"><em><a id="bblock_header:265" href="#bblock_header:265">block header</a></em></strong> <a href="#bblock_header:117">:=</a></span>
+<strong class="block-title"><em><a id="block-header-block-5" href="#block-header-block-5">block header</a></em></strong> <a href="#block-header-block-1">:=</a></span>
 <pre class="prettyprint"><code class="">typedef struct
 {
     uint32_t contents_length;
@@ -314,7 +314,7 @@ We just try as many as we can!</p>
 
 <div class="code-block">
 <span class="block-header">
-<strong class="block-title"><em><a id="bnonce_search:282" href="#bnonce_search:282">nonce search</a></em></strong></span>
+<strong class="block-title"><em><a id="nonce-search-block-7" href="#nonce-search-block-7">nonce search</a></em></strong></span>
 <pre class="prettyprint"><code class="">/* adjust the nonce until the block header is &lt; the target hash */
 uint8_t block_hash[32];
 
@@ -328,7 +328,7 @@ for (uint32_t i = 0; i &lt; UINT32_MAX; ++i)
         return;
 }
 </code></pre>
-<p class="block-usages"><small>Used by <a href="#bmining:309" title="index.lit:310 mining">1</a> </small></p></div>
+<p class="block-usages"><small>Used by <a href="#mining-block-9" title="mining">1</a> </small></p></div>
 
 
 <p>As you can imagine, this brute force operation of adjusting numbers, and hashing again can take a lot of CPU time!</p>
@@ -345,7 +345,7 @@ If all numbers have been tried, the timestamp is reset to the current time, and 
 
 <div class="code-block">
 <span class="block-header">
-<strong class="block-title"><em><a id="bmining:309" href="#bmining:309">mining</a></em></strong></span>
+<strong class="block-title"><em><a id="mining-block-9" href="#mining-block-9">mining</a></em></strong></span>
 <pre class="prettyprint"><code class="">void mine_block(block_header_t* header, const uint8_t* target)
 {
     while (1)
@@ -353,7 +353,7 @@ If all numbers have been tried, the timestamp is reset to the current time, and 
         /* MINING: start of the mining round */
         header-&gt;timestamp = (uint64_t)time(NULL); 
 
-        <em class="block-link nocode" title="index.lit:283"><a href="#bnonce_search:282">@{nonce search}</a></em>
+        <em class="block-link nocode" title=""><a href="#nonce-search-block-7">@{nonce search}</a></em>
  
         /* The uint32 expired without finding a valid hash.
            Restart the time, and hope that this time + nonce combo works. */
@@ -363,7 +363,7 @@ If all numbers have been tried, the timestamp is reset to the current time, and 
     assert(0);
 }
 </code></pre>
-<p class="block-usages"><small>Used by <a href="#b/blockchain.c:494" title="index.lit:495 /blockchain.c">1</a> </small></p></div>
+<p class="block-usages"><small>Used by <a href="#-blockchain.c-block-15" title="/blockchain.c">1</a> </small></p></div>
 
 
 <h3>Target</h3>
@@ -477,7 +477,7 @@ We print each block header as soon as it is created.</p>
 
 <div class="code-block">
 <span class="block-header">
-<strong class="block-title"><em><a id="binput_loop:435" href="#binput_loop:435">input loop</a></em></strong></span>
+<strong class="block-title"><em><a id="input-loop-block-11" href="#input-loop-block-11">input loop</a></em></strong></span>
 <pre class="prettyprint"><code class="">int block_no = 0;
 block_header_t previous;
 
@@ -516,7 +516,7 @@ while (!feof(stdin))
 
 }
 </code></pre>
-<p class="block-usages"><small>Used by <a href="#b/blockchain.c:494" title="index.lit:495 /blockchain.c">1</a> </small></p></div>
+<p class="block-usages"><small>Used by <a href="#-blockchain.c-block-15" title="/blockchain.c">1</a> </small></p></div>
 
 
 
@@ -531,7 +531,7 @@ which are not relevant to understanding blockchains.</p>
 
 <div class="code-block">
 <span class="block-header">
-<strong class="block-title"><em><a id="bprint_hashes:482" href="#bprint_hashes:482">print hashes</a></em></strong></span>
+<strong class="block-title"><em><a id="print-hashes-block-13" href="#print-hashes-block-13">print hashes</a></em></strong></span>
 <pre class="prettyprint"><code class="">void fprint_hash(FILE* f, uint8_t* hash)
 {
     fprintf(f, "0x");
@@ -539,14 +539,14 @@ which are not relevant to understanding blockchains.</p>
         fprintf(f, "%02x", hash[i]);
 }
 </code></pre>
-<p class="block-usages"><small>Used by <a href="#b/blockchain.c:494" title="index.lit:495 /blockchain.c">1</a> </small></p></div>
+<p class="block-usages"><small>Used by <a href="#-blockchain.c-block-15" title="/blockchain.c">1</a> </small></p></div>
 
 
 <p>Now we need to combine everything and add a main loop:</p>
 
 <div class="code-block">
 <span class="block-header">
-<strong class="block-title"><em><a id="b/blockchain.c:494" href="#b/blockchain.c:494">/blockchain.c</a></em></strong></span>
+<strong class="block-title"><em><a id="-blockchain.c-block-15" href="#-blockchain.c-block-15">/blockchain.c</a></em></strong></span>
 <pre class="prettyprint"><code class="">#include &lt;stdio.h&gt;
 #include &lt;stdlib.h&gt;
 #include &lt;stdint.h&gt;
@@ -559,13 +559,13 @@ which are not relevant to understanding blockchains.</p>
 
 #define LINE_MAX 4096
 
-<em class="block-link nocode" title="index.lit:483"><a href="#bprint_hashes:482">@{print hashes}</a></em>
+<em class="block-link nocode" title=""><a href="#print-hashes-block-13">@{print hashes}</a></em>
 
-<em class="block-link nocode" title="index.lit:118"><a href="#bblock_header:117">@{block header}</a></em>
+<em class="block-link nocode" title=""><a href="#block-header-block-1">@{block header}</a></em>
 
-<em class="block-link nocode" title="index.lit:310"><a href="#bmining:309">@{mining}</a></em>
+<em class="block-link nocode" title=""><a href="#mining-block-9">@{mining}</a></em>
 
-<em class="block-link nocode" title="index.lit:169"><a href="#bbuild_block:168">@{build block}</a></em>
+<em class="block-link nocode" title=""><a href="#build-block-block-3">@{build block}</a></em>
 
 /* this controls the difficulty.
    I chose this target because it works well on my computer.
@@ -581,7 +581,7 @@ int main(int argc, const char* argv[])
        too easy?: try target[2] = 0x01 */
     target[2] = 0x0F;
 
-    <em class="block-link nocode" title="index.lit:436"><a href="#binput_loop:435">@{input loop}</a></em>
+    <em class="block-link nocode" title=""><a href="#input-loop-block-11">@{input loop}</a></em>
     return 1;
 }
 </code></pre>
@@ -594,7 +594,7 @@ follow the references or refer to the <a href="src/blockchain.c">final code</a><
 
 <h3>Running</h3>
 
-<p>I have provided <a href="docs/data/gorgias.txt">Plato&rsquo;s Gorgias</a> as a large sample text to store in our blockchain.
+<p>I have provided <a href="data/gorgias.txt">Plato&rsquo;s Gorgias</a> as a large sample text to store in our blockchain.
 Go ahead and download it.
 Run the program by inputting the file to <code>stdin</code>.</p>
 
